@@ -36,8 +36,8 @@ const businessSchema = z.object({
   phone: z.string().optional(),
   address: z.string().optional(),
   taxId: z.string().optional(),
-  currency: z.string().default("USD"),
-  fiscalYearStart: z.number().min(1).max(12).default(1),
+  currency: z.string().min(1),
+  fiscalYearStart: z.number().min(1).max(12),
 });
 
 type BusinessFormValues = z.infer<typeof businessSchema>;

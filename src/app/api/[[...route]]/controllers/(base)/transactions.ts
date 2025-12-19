@@ -18,8 +18,8 @@ const app = new Hono()
         startDate: z.string().optional(),
         endDate: z.string().optional(),
         isReconciled: z.string().transform((val) => val === "true").optional(),
-        page: z.string().transform(Number).default("1"),
-        limit: z.string().transform(Number).default("50"),
+        page: z.string().optional().transform((val) => Number(val || 1)),
+        limit: z.string().optional().transform((val) => Number(val || 50)),
       })
     ),
     async (c) => {
@@ -343,10 +343,12 @@ const app = new Hono()
         });
 
         if (account) {
+          const creditAmount = typeof entry.creditAmount === 'number' ? entry.creditAmount : Number(entry.creditAmount);
+          const debitAmount = typeof entry.debitAmount === 'number' ? entry.debitAmount : Number(entry.debitAmount);
           const balanceChange =
             account.normalBalance === BalanceType.DEBIT
-              ? entry.creditAmount - entry.debitAmount
-              : entry.debitAmount - entry.creditAmount;
+              ? creditAmount - debitAmount
+              : debitAmount - creditAmount;
 
           await tx.ledgerAccount.update({
             where: { id: entry.ledgerAccountId },

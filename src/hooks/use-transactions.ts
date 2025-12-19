@@ -130,7 +130,10 @@ export const useDeleteTransaction = () => {
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || "Failed to delete transaction");
+        const message = error && typeof error === 'object' && 'error' in error 
+          ? (error as { error: string }).error 
+          : "Failed to delete transaction";
+        throw new Error(message);
       }
 
       return await response.json();

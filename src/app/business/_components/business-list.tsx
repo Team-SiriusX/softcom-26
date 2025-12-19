@@ -172,7 +172,7 @@ export function BusinessList() {
       {editingBusiness && (
         <BusinessFormDialog
           open={!!editingBusiness}
-          onOpenChange={(open) => !open && setEditingBusiness(null)}
+          onOpenChange={(open: boolean) => !open && setEditingBusiness(null)}
           business={editingBusiness}
         />
       )}

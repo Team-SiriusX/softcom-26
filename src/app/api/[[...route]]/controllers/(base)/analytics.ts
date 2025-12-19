@@ -232,7 +232,7 @@ const app = new Hono()
       "query",
       z.object({
         businessId: z.string(),
-        months: z.string().transform(Number).default("12"),
+        months: z.string().optional().transform((val) => Number(val || 12)),
       })
     ),
     async (c) => {
@@ -364,7 +364,7 @@ const app = new Hono()
         businessId: z.string(),
         startDate: z.string().transform((val) => new Date(val)),
         endDate: z.string().transform((val) => new Date(val)),
-        limit: z.string().transform(Number).default("5"),
+        limit: z.string().optional().transform((val) => Number(val || 5)),
       })
     ),
     async (c) => {

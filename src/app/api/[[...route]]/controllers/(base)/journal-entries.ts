@@ -15,8 +15,8 @@ const app = new Hono()
         transactionId: z.string().optional(),
         startDate: z.string().optional(),
         endDate: z.string().optional(),
-        page: z.string().transform(Number).default("1"),
-        limit: z.string().transform(Number).default("50"),
+        page: z.string().optional().transform((val) => Number(val || 1)),
+        limit: z.string().optional().transform((val) => Number(val || 50)),
       })
     ),
     async (c) => {
