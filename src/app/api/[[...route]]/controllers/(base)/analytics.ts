@@ -2,9 +2,69 @@ import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import * as z from "zod";
 import { db } from "@/lib/db";
-import { AccountType, TransactionType } from "@/generated/prisma";
+import { AccountType, AccountSubType, TransactionType } from "@/generated/prisma";
 
 const app = new Hono()
+  // Debug endpoint to check data availability
+  .get(
+    "/debug",
+    zValidator(
+      "query",
+      z.object({
+        businessId: z.string(),
+      })
+    ),
+    async (c) => {
+      const { businessId } = c.req.valid("query");
+
+      const [
+        totalTransactions,
+        totalJournalEntries,
+        totalLedgerAccounts,
+        revenueAccounts,
+        expenseAccounts,
+        assetAccounts,
+      ] = await Promise.all([
+        db.transaction.count({ where: { businessId } }),
+        db.journalEntry.count({ where: { businessId } }),
+        db.ledgerAccount.count({ where: { businessId } }),
+        db.ledgerAccount.count({ where: { businessId, type: AccountType.REVENUE } }),
+        db.ledgerAccount.count({ where: { businessId, type: AccountType.EXPENSE } }),
+        db.ledgerAccount.count({ where: { businessId, type: AccountType.ASSET } }),
+      ]);
+
+      // Sample some actual data
+      const sampleTransactions = await db.transaction.findMany({
+        where: { businessId },
+        take: 5,
+        orderBy: { date: "desc" },
+        include: { category: true, ledgerAccount: true },
+      });
+
+      const sampleJournalEntries = await db.journalEntry.findMany({
+        where: { businessId },
+        take: 5,
+        orderBy: { date: "desc" },
+        include: { ledgerAccount: true },
+      });
+
+      return c.json({
+        counts: {
+          transactions: totalTransactions,
+          journalEntries: totalJournalEntries,
+          ledgerAccounts: totalLedgerAccounts,
+          revenueAccounts,
+          expenseAccounts,
+          assetAccounts,
+        },
+        samples: {
+          transactions: sampleTransactions,
+          journalEntries: sampleJournalEntries,
+        },
+      });
+    }
+  )
+
   // Get dashboard overview metrics
   .get(
     "/overview",
@@ -21,32 +81,47 @@ const app = new Hono()
       const startDate = new Date(endDate);
       startDate.setDate(1); // First day of current month
 
-      // Get current cash position
+      // Get current cash position (use current balance field for accuracy)
       const cashAccounts = await db.ledgerAccount.findMany({
         where: {
           businessId,
+          type: AccountType.ASSET,
+          isActive: true,
           OR: [
             { name: { contains: "Cash", mode: "insensitive" } },
             { name: { contains: "Bank", mode: "insensitive" } },
+            { code: { startsWith: "10" } }, // Standard cash account codes
+            { subType: "CURRENT_ASSET" },
           ],
-        },
-        include: {
-          journalEntries: {
-            where: { date: { lte: endDate } },
-          },
         },
       });
 
+      // Use currentBalance field which is updated by transactions
       const totalCash = cashAccounts.reduce((sum, account) => {
-        const accountBalance = account.journalEntries.reduce((bal, entry) => {
-          const change =
-            account.normalBalance === "DEBIT"
-              ? Number(entry.debitAmount) - Number(entry.creditAmount)
-              : Number(entry.creditAmount) - Number(entry.debitAmount);
-          return bal + change;
-        }, 0);
-        return sum + accountBalance;
+        return sum + Number(account.currentBalance);
       }, 0);
+
+      // Get previous month's cash for comparison
+      const prevMonth = new Date(startDate);
+      prevMonth.setMonth(prevMonth.getMonth() - 1);
+      const prevMonthEntries = await db.journalEntry.findMany({
+        where: {
+          businessId,
+          ledgerAccountId: { in: cashAccounts.map(a => a.id) },
+          date: { lt: startDate },
+        },
+      });
+      
+      const prevCash = prevMonthEntries.reduce((sum, entry) => {
+        const account = cashAccounts.find(a => a.id === entry.ledgerAccountId);
+        if (!account) return sum;
+        const change = account.normalBalance === "DEBIT"
+          ? Number(entry.debitAmount) - Number(entry.creditAmount)
+          : Number(entry.creditAmount) - Number(entry.debitAmount);
+        return sum + change;
+      }, 0);
+      
+      const cashChange = prevCash > 0 ? ((totalCash - prevCash) / prevCash) * 100 : 0;
 
       // Get total revenue for current month
       const revenueAccounts = await db.ledgerAccount.findMany({
@@ -70,8 +145,42 @@ const app = new Hono()
         const accountRevenue = account.journalEntries.reduce((bal, entry) => {
           return bal + (Number(entry.creditAmount) - Number(entry.debitAmount));
         }, 0);
-        return sum + accountRevenue;
+        return sum + Math.abs(accountRevenue); // Ensure positive
       }, 0);
+
+      // Get previous month revenue
+      const prevMonthStart = new Date(startDate);
+      prevMonthStart.setMonth(prevMonthStart.getMonth() - 1);
+      const prevMonthEnd = new Date(startDate);
+      prevMonthEnd.setDate(0); // Last day of previous month
+      
+      const prevRevenueAccounts = await db.ledgerAccount.findMany({
+        where: {
+          businessId,
+          type: AccountType.REVENUE,
+        },
+        include: {
+          journalEntries: {
+            where: {
+              date: {
+                gte: prevMonthStart,
+                lte: prevMonthEnd,
+              },
+            },
+          },
+        },
+      });
+      
+      const prevMonthRevenue = prevRevenueAccounts.reduce((sum, account) => {
+        const accountRevenue = account.journalEntries.reduce((bal, entry) => {
+          return bal + (Number(entry.creditAmount) - Number(entry.debitAmount));
+        }, 0);
+        return sum + Math.abs(accountRevenue); // Ensure positive
+      }, 0);
+      
+      const revenueChange = prevMonthRevenue > 0 
+        ? ((monthlyRevenue - prevMonthRevenue) / prevMonthRevenue) * 100 
+        : monthlyRevenue > 0 ? 100 : 0;
 
       // Get total expenses for current month
       const expenseAccounts = await db.ledgerAccount.findMany({
@@ -95,53 +204,64 @@ const app = new Hono()
         const accountExpense = account.journalEntries.reduce((bal, entry) => {
           return bal + (Number(entry.debitAmount) - Number(entry.creditAmount));
         }, 0);
-        return sum + accountExpense;
+        return sum + Math.abs(accountExpense); // Ensure positive
       }, 0);
+
+      // Get previous month expenses
+      const prevExpenseAccounts = await db.ledgerAccount.findMany({
+        where: {
+          businessId,
+          type: AccountType.EXPENSE,
+        },
+        include: {
+          journalEntries: {
+            where: {
+              date: {
+                gte: prevMonthStart,
+                lte: prevMonthEnd,
+              },
+            },
+          },
+        },
+      });
+      
+      const prevMonthExpenses = prevExpenseAccounts.reduce((sum, account) => {
+        const accountExpense = account.journalEntries.reduce((bal, entry) => {
+          return bal + (Number(entry.debitAmount) - Number(entry.creditAmount));
+        }, 0);
+        return sum + Math.abs(accountExpense); // Ensure positive
+      }, 0);
+      
+      const expenseChange = prevMonthExpenses > 0 
+        ? ((monthlyExpenses - prevMonthExpenses) / prevMonthExpenses) * 100 
+        : monthlyExpenses > 0 ? 100 : 0;
 
       // Calculate working capital
       const currentAssets = await db.ledgerAccount.findMany({
         where: {
           businessId,
           type: AccountType.ASSET,
-          subType: "CURRENT_ASSET",
-        },
-        include: {
-          journalEntries: {
-            where: { date: { lte: endDate } },
-          },
+          subType: AccountSubType.CURRENT_ASSET,
+          isActive: true,
         },
       });
 
       const totalCurrentAssets = currentAssets.reduce((sum, account) => {
-        const balance = account.journalEntries.reduce((bal, entry) => {
-          return (
-            bal + (Number(entry.debitAmount) - Number(entry.creditAmount))
-          );
-        }, 0);
-        return sum + balance;
+        return sum + Number(account.currentBalance);
       }, 0);
 
       const currentLiabilities = await db.ledgerAccount.findMany({
         where: {
           businessId,
           type: AccountType.LIABILITY,
-          subType: "CURRENT_LIABILITY",
-        },
-        include: {
-          journalEntries: {
-            where: { date: { lte: endDate } },
-          },
+          subType: AccountSubType.CURRENT_LIABILITY,
+          isActive: true,
         },
       });
 
       const totalCurrentLiabilities = currentLiabilities.reduce(
         (sum, account) => {
-          const balance = account.journalEntries.reduce((bal, entry) => {
-            return (
-              bal + (Number(entry.creditAmount) - Number(entry.debitAmount))
-            );
-          }, 0);
-          return sum + balance;
+          return sum + Number(account.currentBalance);
         },
         0
       );
@@ -167,6 +287,7 @@ const app = new Hono()
         where: {
           businessId,
           type: AccountType.EXPENSE,
+          isActive: true,
         },
         include: {
           journalEntries: {
@@ -184,23 +305,24 @@ const app = new Hono()
         const accountExpense = account.journalEntries.reduce((bal, entry) => {
           return bal + (Number(entry.debitAmount) - Number(entry.creditAmount));
         }, 0);
-        return sum + accountExpense;
+        return sum + Math.abs(accountExpense); // Use absolute value
       }, 0);
 
       const burnRate = totalBurnRateExpenses / 3; // Average per month
+      const runway = burnRate > 0 ? totalCash / burnRate : Infinity;
 
       return c.json({
         cash: {
           current: totalCash,
-          change: 0, // TODO: Calculate vs previous period
+          change: cashChange,
         },
         revenue: {
           monthly: monthlyRevenue,
-          change: 0, // TODO: Calculate vs previous month
+          change: revenueChange,
         },
         expenses: {
           monthly: monthlyExpenses,
-          change: 0, // TODO: Calculate vs previous month
+          change: expenseChange,
         },
         netIncome: {
           monthly: monthlyRevenue - monthlyExpenses,
@@ -218,7 +340,7 @@ const app = new Hono()
         },
         burnRate: {
           monthly: burnRate,
-          runway: burnRate > 0 ? totalCash / burnRate : 0, // Months until cash runs out
+          runway: runway === Infinity ? 0 : runway, // Months until cash runs out
         },
         transactionCount,
       });
@@ -255,26 +377,41 @@ const app = new Hono()
           0
         );
 
-        const transactions = await db.transaction.findMany({
+        // Get revenue from journal entries (double-entry accounting)
+        const revenueAccounts = await db.ledgerAccount.findMany({
           where: {
             businessId,
-            type: TransactionType.INCOME,
-            date: {
-              gte: startDate,
-              lte: endDate,
+            type: AccountType.REVENUE,
+            isActive: true,
+          },
+          include: {
+            journalEntries: {
+              where: {
+                date: {
+                  gte: startDate,
+                  lte: endDate,
+                },
+              },
             },
           },
         });
 
-        const revenue = transactions.reduce(
-          (sum, t) => sum + Number(t.amount),
-          0
-        );
+        const revenue = revenueAccounts.reduce((sum, account) => {
+          const accountRevenue = account.journalEntries.reduce((bal, entry) => {
+            // Revenue accounts have credit normal balance
+            return bal + (Number(entry.creditAmount) - Number(entry.debitAmount));
+          }, 0);
+          return sum + accountRevenue;
+        }, 0);
+
+        const transactionCount = revenueAccounts.reduce((count, account) => {
+          return count + account.journalEntries.length;
+        }, 0);
 
         trends.push({
           month: startDate.toISOString().substring(0, 7),
-          revenue,
-          count: transactions.length,
+          revenue: Math.abs(revenue), // Ensure positive value
+          count: transactionCount,
         });
       }
 
@@ -755,14 +892,31 @@ const app = new Hono()
       const cashAccounts = await db.ledgerAccount.findMany({
         where: {
           businessId,
+          type: AccountType.ASSET,
+          isActive: true,
           OR: [
             { name: { contains: "Cash", mode: "insensitive" } },
             { name: { contains: "Bank", mode: "insensitive" } },
+            { code: { startsWith: "10" } },
+            { subType: "CURRENT_ASSET" },
           ],
         },
       });
 
       const cashAccountIds = cashAccounts.map((a) => a.id);
+      
+      if (cashAccountIds.length === 0) {
+        // No cash accounts found, return zero cash flow
+        return c.json({
+          period: { startDate, endDate },
+          operating: { inflows: 0, outflows: 0, net: 0 },
+          investing: { inflows: 0, outflows: 0, net: 0 },
+          financing: { inflows: 0, outflows: 0, net: 0 },
+          netCashFlow: 0,
+          cashAtStart: 0,
+          cashAtEnd: 0,
+        });
+      }
 
       // Operating activities (from transactions)
       const operatingTransactions = await db.transaction.findMany({

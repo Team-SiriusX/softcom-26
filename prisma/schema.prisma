@@ -208,7 +208,7 @@ model JournalEntry {
   debitAmount    Decimal     @default(0) @db.Decimal(15, 2)
   creditAmount   Decimal     @default(0) @db.Decimal(15, 2)
 
-  @@unique([businessId, entryNumber])
+  @@index([businessId, entryNumber])
   @@index([businessId, date])
   @@index([businessId, ledgerAccountId])
   @@index([transactionId])

@@ -41,12 +41,13 @@ const app = new Hono()
 
       // Calculate balances for each account
       const accountsWithBalances = accounts.map((account) => {
+        // Use journal entries for accurate as-of-date balance
         const totalDebits = account.journalEntries.reduce(
-          (sum, entry) => sum + Number(entry.debitAmount),
+          (sum, entry) => sum + Number(entry.debitAmount || 0),
           0
         );
         const totalCredits = account.journalEntries.reduce(
-          (sum, entry) => sum + Number(entry.creditAmount),
+          (sum, entry) => sum + Number(entry.creditAmount || 0),
           0
         );
 
@@ -60,8 +61,8 @@ const app = new Hono()
           code: account.code,
           name: account.name,
           type: account.type,
-          subType: account.subType,
-          balance,
+          subType: account.subType || null,
+          balance: Math.abs(balance), // Ensure positive display
         };
       });
 
@@ -70,7 +71,7 @@ const app = new Hono()
         currentAssets: accountsWithBalances.filter(
           (a) =>
             a.type === AccountType.ASSET &&
-            a.subType === AccountSubType.CURRENT_ASSET
+            (a.subType === AccountSubType.CURRENT_ASSET || (!a.subType && a.code?.startsWith('1')))
         ),
         fixedAssets: accountsWithBalances.filter(
           (a) =>
@@ -80,7 +81,7 @@ const app = new Hono()
         otherAssets: accountsWithBalances.filter(
           (a) =>
             a.type === AccountType.ASSET &&
-            a.subType === AccountSubType.OTHER_ASSET
+            (a.subType === AccountSubType.OTHER_ASSET || (a.type === AccountType.ASSET && !a.subType && !a.code?.startsWith('1')))
         ),
       };
 
@@ -261,11 +262,11 @@ const app = new Hono()
       // Calculate balances for each account
       const accountsWithBalances = accounts.map((account) => {
         const totalDebits = account.journalEntries.reduce(
-          (sum, entry) => sum + Number(entry.debitAmount),
+          (sum, entry) => sum + Number(entry.debitAmount || 0),
           0
         );
         const totalCredits = account.journalEntries.reduce(
-          (sum, entry) => sum + Number(entry.creditAmount),
+          (sum, entry) => sum + Number(entry.creditAmount || 0),
           0
         );
 
@@ -279,22 +280,22 @@ const app = new Hono()
           code: account.code,
           name: account.name,
           type: account.type,
-          subType: account.subType,
-          balance,
+          subType: account.subType || null,
+          balance: Math.abs(balance), // Ensure positive amounts
         };
       });
 
-      // Group revenue and expenses
+      // Group revenue and expenses (include accounts without subtype)
       const revenue = {
         operatingRevenue: accountsWithBalances.filter(
           (a) =>
             a.type === AccountType.REVENUE &&
-            a.subType === AccountSubType.OPERATING_REVENUE
+            (a.subType === AccountSubType.OPERATING_REVENUE || (!a.subType && a.code?.startsWith('4')))
         ),
         otherRevenue: accountsWithBalances.filter(
           (a) =>
             a.type === AccountType.REVENUE &&
-            a.subType === AccountSubType.OTHER_REVENUE
+            (a.subType === AccountSubType.OTHER_REVENUE || (a.type === AccountType.REVENUE && !a.subType && !a.code?.startsWith('4')))
         ),
       };
 
@@ -302,17 +303,17 @@ const app = new Hono()
         costOfGoodsSold: accountsWithBalances.filter(
           (a) =>
             a.type === AccountType.EXPENSE &&
-            a.subType === AccountSubType.COST_OF_GOODS_SOLD
+            (a.subType === AccountSubType.COST_OF_GOODS_SOLD || (!a.subType && a.code?.startsWith('5')))
         ),
         operatingExpenses: accountsWithBalances.filter(
           (a) =>
             a.type === AccountType.EXPENSE &&
-            a.subType === AccountSubType.OPERATING_EXPENSE
+            (a.subType === AccountSubType.OPERATING_EXPENSE || (!a.subType && a.code?.startsWith('6')))
         ),
         otherExpenses: accountsWithBalances.filter(
           (a) =>
             a.type === AccountType.EXPENSE &&
-            a.subType === AccountSubType.OTHER_EXPENSE
+            (a.subType === AccountSubType.OTHER_EXPENSE || (a.type === AccountType.EXPENSE && !a.subType && !a.code?.startsWith('5') && !a.code?.startsWith('6')))
         ),
       };
 
@@ -407,11 +408,13 @@ const app = new Hono()
       const cashAccounts = await db.ledgerAccount.findMany({
         where: {
           businessId,
+          type: AccountType.ASSET,
+          isActive: true,
           OR: [
             { name: { contains: "Cash", mode: "insensitive" } },
             { name: { contains: "Bank", mode: "insensitive" } },
-            { code: { startsWith: "1000" } },
-            { code: { startsWith: "1100" } },
+            { code: { startsWith: "10" } },
+            { subType: AccountSubType.CURRENT_ASSET },
           ],
         },
       });

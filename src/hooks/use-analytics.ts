@@ -1,6 +1,27 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { client } from "@/lib/hono";
 
+// Debug endpoint to check data
+export const useGetAnalyticsDebug = (businessId?: string) => {
+  return useQuery({
+    queryKey: ["analytics", "debug", businessId],
+    queryFn: async () => {
+      if (!businessId) return null;
+
+      const response = await client.api.analytics.debug.$get({
+        query: { businessId },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch analytics debug info");
+      }
+
+      return await response.json();
+    },
+    enabled: !!businessId,
+  });
+};
+
 // Get analytics overview
 export const useGetAnalyticsOverview = (businessId?: string) => {
   return useQuery({

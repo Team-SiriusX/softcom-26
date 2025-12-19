@@ -141,18 +141,18 @@ const app = new Hono()
         return c.json({ error: "Invalid account ID" }, 400);
       }
 
-      // Generate entry number (sequential)
-      const lastEntry = await db.journalEntry.findFirst({
-        where: { businessId: data.businessId },
-        orderBy: { entryNumber: "desc" },
-      });
-
-      const nextEntryNumber = lastEntry
-        ? (parseInt(lastEntry.entryNumber) + 1).toString().padStart(6, "0")
-        : "000001";
-
       // Create transaction and journal entries in a transaction
       const result = await db.$transaction(async (tx) => {
+        // Generate entry number (sequential) - inside transaction to avoid race conditions
+        const lastEntry = await tx.journalEntry.findFirst({
+          where: { businessId: data.businessId },
+          orderBy: { entryNumber: "desc" },
+        });
+
+        const nextEntryNumber = lastEntry
+          ? (parseInt(lastEntry.entryNumber) + 1).toString().padStart(6, "0")
+          : "000001";
+
         // Create the transaction
         const transaction = await tx.transaction.create({
           data: {
