@@ -1,5 +1,6 @@
 import React from "react";
 import { QueryProvider } from "./query-provider";
+import { BusinessProvider } from "./business-provider";
 import { Toaster } from "../ui/sonner";
 
 export default function Providers({
@@ -7,8 +8,10 @@ export default function Providers({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <QueryProvider>
-      <Toaster richColors />
-      {children}
+      <BusinessProvider>
+        <Toaster richColors />
+        {children}
+      </BusinessProvider>
     </QueryProvider>
   );
 }

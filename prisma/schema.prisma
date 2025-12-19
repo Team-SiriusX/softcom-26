@@ -1,9 +1,6 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
   output   = "../src/generated/prisma"
@@ -14,26 +11,32 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ============================================
+// AUTHENTICATION & USER MANAGEMENT
+// ============================================
+
 model User {
-  id            String    @id @default(cuid())
+  id            String     @id @default(cuid())
   name          String
-  email         String
-  emailVerified Boolean   @default(false)
+  email         String     @unique
+  emailVerified Boolean    @default(false)
   image         String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @default(now()) @updatedAt
-  role          UserRole  @default(USER)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  role          UserRole   @default(USER)
+  
+  // Relations
   sessions      Session[]
   accounts      Account[]
+  businesses    Business[]
 
-  @@unique([email])
   @@map("user")
 }
 
 model Session {
   id        String   @id
   expiresAt DateTime
-  token     String
+  token     String   @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   ipAddress String?
@@ -41,7 +44,6 @@ model Session {
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([token])
   @@map("session")
 }
 
@@ -70,14 +72,231 @@ model Verification {
   value      String
   expiresAt  DateTime
   createdAt  DateTime @default(now())
-  updatedAt  DateTime @default(now()) @updatedAt
+  updatedAt  DateTime @updatedAt
 
   @@map("verification")
 }
 
-// enum
+// ============================================
+// BUSINESS & ACCOUNTING CORE
+// ============================================
+
+model Business {
+  id              String   @id @default(cuid())
+  name            String
+  email           String?
+  phone           String?
+  address         String?
+  taxId           String?
+  currency        String   @default("USD")
+  fiscalYearStart Int      @default(1) // Month number (1-12)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Relations
+  ledgerAccounts  LedgerAccount[]
+  transactions    Transaction[]
+  categories      Category[]
+  journalEntries  JournalEntry[]
+
+  @@map("business")
+}
+
+model LedgerAccount {
+  id              String            @id @default(cuid())
+  code            String            // Account code (e.g., "1000", "2100")
+  name            String            // Account name (e.g., "Cash", "Accounts Payable")
+  description     String?
+  type            AccountType       // Asset, Liability, Equity, Revenue, Expense
+  subType         AccountSubType    // Current Asset, Fixed Asset, etc.
+  normalBalance   BalanceType       // DEBIT or CREDIT
+  isActive        Boolean           @default(true)
+  currentBalance  Decimal           @default(0) @db.Decimal(15, 2)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  businessId      String
+  business        Business          @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  parentAccountId String?
+  parentAccount   LedgerAccount?    @relation("AccountHierarchy", fields: [parentAccountId], references: [id])
+  subAccounts     LedgerAccount[]   @relation("AccountHierarchy")
+  
+  // Relations
+  journalEntries  JournalEntry[]
+  transactions    Transaction[]
+
+  @@unique([businessId, code])
+  @@index([businessId, type])
+  @@index([businessId, isActive])
+  @@map("ledger_account")
+}
+
+model Category {
+  id           String        @id @default(cuid())
+  name         String
+  description  String?
+  type         CategoryType  // INCOME, EXPENSE, TRANSFER
+  color        String?       // For UI visualization
+  icon         String?       // For UI visualization
+  isActive     Boolean       @default(true)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  businessId   String
+  business     Business      @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  parentId     String?
+  parent       Category?     @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children     Category[]    @relation("CategoryHierarchy")
+  
+  // Relations
+  transactions Transaction[]
+
+  @@unique([businessId, name])
+  @@index([businessId, type])
+  @@map("category")
+}
+
+// ============================================
+// TRANSACTION & JOURNAL ENTRIES (Double-Entry)
+// ============================================
+
+model Transaction {
+  id              String            @id @default(cuid())
+  date            DateTime
+  description     String
+  amount          Decimal           @db.Decimal(15, 2)
+  type            TransactionType   // INCOME, EXPENSE, TRANSFER
+  referenceNumber String?           // Check number, invoice number, etc.
+  notes           String?
+  isReconciled    Boolean           @default(false)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  businessId      String
+  business        Business          @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  ledgerAccountId String
+  ledgerAccount   LedgerAccount     @relation(fields: [ledgerAccountId], references: [id])
+  categoryId      String?
+  category        Category?         @relation(fields: [categoryId], references: [id])
+  
+  // Relations
+  journalEntries  JournalEntry[]
+
+  @@index([businessId, date])
+  @@index([businessId, type])
+  @@index([businessId, ledgerAccountId])
+  @@index([businessId, categoryId])
+  @@map("transaction")
+}
+
+model JournalEntry {
+  id             String      @id @default(cuid())
+  date           DateTime
+  entryNumber    String      // Sequential entry number for audit trail
+  description    String
+  entryType      EntryType   @default(STANDARD) // STANDARD, ADJUSTING, CLOSING
+  isPosted       Boolean     @default(true)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  businessId     String
+  business       Business    @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  transactionId  String?
+  transaction    Transaction? @relation(fields: [transactionId], references: [id])
+  ledgerAccountId String
+  ledgerAccount  LedgerAccount @relation(fields: [ledgerAccountId], references: [id])
+  
+  // Double-entry fields
+  debitAmount    Decimal     @default(0) @db.Decimal(15, 2)
+  creditAmount   Decimal     @default(0) @db.Decimal(15, 2)
+
+  @@unique([businessId, entryNumber])
+  @@index([businessId, date])
+  @@index([businessId, ledgerAccountId])
+  @@index([transactionId])
+  @@map("journal_entry")
+}
+
+// ============================================
+// ENUMS
+// ============================================
 
 enum UserRole {
   USER
   ADMIN
+}
+
+enum AccountType {
+  ASSET
+  LIABILITY
+  EQUITY
+  REVENUE
+  EXPENSE
+}
+
+enum AccountSubType {
+  // Assets
+  CURRENT_ASSET
+  FIXED_ASSET
+  OTHER_ASSET
+  
+  // Liabilities
+  CURRENT_LIABILITY
+  LONG_TERM_LIABILITY
+  OTHER_LIABILITY
+  
+  // Equity
+  OWNERS_EQUITY
+  RETAINED_EARNINGS
+  
+  // Revenue
+  OPERATING_REVENUE
+  OTHER_REVENUE
+  
+  // Expenses
+  OPERATING_EXPENSE
+  COST_OF_GOODS_SOLD
+  OTHER_EXPENSE
+}
+
+enum BalanceType {
+  DEBIT
+  CREDIT
+}
+
+enum CategoryType {
+  INCOME
+  EXPENSE
+  TRANSFER
+}
+
+enum TransactionType {
+  INCOME
+  EXPENSE
+  TRANSFER
+}
+
+enum EntryType {
+  STANDARD
+  ADJUSTING
+  CLOSING
+}
+
+enum InsightType {
+  TREND
+  ANOMALY
+  OPPORTUNITY
+  RISK
+  RECOMMENDATION
+}
+
+enum SeverityLevel {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum MessageRole {
+  USER
+  ASSISTANT
+  SYSTEM
 }
