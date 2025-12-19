@@ -44,7 +44,8 @@ async function seed() {
         {
           code: "1000",
           name: "Cash",
-          accountType: AccountType.ASSET,
+          type: AccountType.ASSET,
+          subType: AccountSubType.CURRENT_ASSET,
           normalBalance: BalanceType.DEBIT,
           isActive: true,
           businessId: business.id,
@@ -52,7 +53,8 @@ async function seed() {
         {
           code: "1010",
           name: "Petty Cash",
-          accountType: AccountType.ASSET,
+          type: AccountType.ASSET,
+          subType: AccountSubType.CURRENT_ASSET,
           normalBalance: BalanceType.DEBIT,
           isActive: true,
           businessId: business.id,
@@ -60,7 +62,8 @@ async function seed() {
         {
           code: "1100",
           name: "Accounts Receivable",
-          accountType: AccountType.ASSET,
+          type: AccountType.ASSET,
+          subType: AccountSubType.CURRENT_ASSET,
           normalBalance: BalanceType.DEBIT,
           isActive: true,
           businessId: business.id,
@@ -68,7 +71,8 @@ async function seed() {
         {
           code: "1200",
           name: "Inventory",
-          accountType: AccountType.ASSET,
+          type: AccountType.ASSET,
+          subType: AccountSubType.CURRENT_ASSET,
           normalBalance: BalanceType.DEBIT,
           isActive: true,
           businessId: business.id,
@@ -76,7 +80,8 @@ async function seed() {
         {
           code: "1500",
           name: "Equipment",
-          accountType: AccountType.ASSET,
+          type: AccountType.ASSET,
+          subType: AccountSubType.FIXED_ASSET,
           normalBalance: BalanceType.DEBIT,
           isActive: true,
           businessId: business.id,
@@ -84,7 +89,8 @@ async function seed() {
         {
           code: "1510",
           name: "Accumulated Depreciation - Equipment",
-          accountType: AccountType.ASSET,
+          type: AccountType.ASSET,
+          subType: AccountSubType.FIXED_ASSET,
           normalBalance: BalanceType.CREDIT,
           isActive: true,
           businessId: business.id,
@@ -94,7 +100,8 @@ async function seed() {
         {
           code: "2000",
           name: "Accounts Payable",
-          accountType: AccountType.LIABILITY,
+          type: AccountType.LIABILITY,
+          subType: AccountSubType.CURRENT_LIABILITY,
           normalBalance: BalanceType.CREDIT,
           isActive: true,
           businessId: business.id,
@@ -102,7 +109,8 @@ async function seed() {
         {
           code: "2100",
           name: "Credit Card Payable",
-          accountType: AccountType.LIABILITY,
+          type: AccountType.LIABILITY,
+          subType: AccountSubType.CURRENT_LIABILITY,
           normalBalance: BalanceType.CREDIT,
           isActive: true,
           businessId: business.id,
@@ -110,7 +118,8 @@ async function seed() {
         {
           code: "2200",
           name: "Loans Payable",
-          accountType: AccountType.LIABILITY,
+          type: AccountType.LIABILITY,
+          subType: AccountSubType.LONG_TERM_LIABILITY,
           normalBalance: BalanceType.CREDIT,
           isActive: true,
           businessId: business.id,
@@ -118,7 +127,8 @@ async function seed() {
         {
           code: "2300",
           name: "Salaries Payable",
-          accountType: AccountType.LIABILITY,
+          type: AccountType.LIABILITY,
+          subType: AccountSubType.CURRENT_LIABILITY,
           normalBalance: BalanceType.CREDIT,
           isActive: true,
           businessId: business.id,
@@ -128,7 +138,8 @@ async function seed() {
         {
           code: "3000",
           name: "Owner's Capital",
-          accountType: AccountType.EQUITY,
+          type: AccountType.EQUITY,
+          subType: AccountSubType.OWNERS_EQUITY,
           normalBalance: BalanceType.CREDIT,
           isActive: true,
           businessId: business.id,
@@ -136,7 +147,8 @@ async function seed() {
         {
           code: "3100",
           name: "Retained Earnings",
-          accountType: AccountType.EQUITY,
+          type: AccountType.EQUITY,
+          subType: AccountSubType.RETAINED_EARNINGS,
           normalBalance: BalanceType.CREDIT,
           isActive: true,
           businessId: business.id,
@@ -146,7 +158,8 @@ async function seed() {
         {
           code: "4000",
           name: "Sales Revenue",
-          accountType: AccountType.REVENUE,
+          type: AccountType.REVENUE,
+          subType: AccountSubType.OPERATING_REVENUE,
           normalBalance: BalanceType.CREDIT,
           isActive: true,
           businessId: business.id,
@@ -154,7 +167,8 @@ async function seed() {
         {
           code: "4100",
           name: "Service Revenue",
-          accountType: AccountType.REVENUE,
+          type: AccountType.REVENUE,
+          subType: AccountSubType.OPERATING_REVENUE,
           normalBalance: BalanceType.CREDIT,
           isActive: true,
           businessId: business.id,
@@ -162,7 +176,8 @@ async function seed() {
         {
           code: "4900",
           name: "Other Income",
-          accountType: AccountType.REVENUE,
+          type: AccountType.REVENUE,
+          subType: AccountSubType.OTHER_REVENUE,
           normalBalance: BalanceType.CREDIT,
           isActive: true,
           businessId: business.id,
@@ -172,7 +187,8 @@ async function seed() {
         {
           code: "5000",
           name: "Cost of Goods Sold",
-          accountType: AccountType.EXPENSE,
+          type: AccountType.EXPENSE,
+          subType: AccountSubType.COST_OF_GOODS_SOLD,
           normalBalance: BalanceType.DEBIT,
           isActive: true,
           businessId: business.id,
@@ -180,7 +196,8 @@ async function seed() {
         {
           code: "6000",
           name: "Salaries Expense",
-          accountType: AccountType.EXPENSE,
+          type: AccountType.EXPENSE,
+          subType: AccountSubType.OPERATING_EXPENSE,
           normalBalance: BalanceType.DEBIT,
           isActive: true,
           businessId: business.id,
@@ -188,7 +205,8 @@ async function seed() {
         {
           code: "6100",
           name: "Rent Expense",
-          accountType: AccountType.EXPENSE,
+          type: AccountType.EXPENSE,
+          subType: AccountSubType.OPERATING_EXPENSE,
           normalBalance: BalanceType.DEBIT,
           isActive: true,
           businessId: business.id,
@@ -196,7 +214,8 @@ async function seed() {
         {
           code: "6200",
           name: "Utilities Expense",
-          accountType: AccountType.EXPENSE,
+          type: AccountType.EXPENSE,
+          subType: AccountSubType.OPERATING_EXPENSE,
           normalBalance: BalanceType.DEBIT,
           isActive: true,
           businessId: business.id,
@@ -204,7 +223,8 @@ async function seed() {
         {
           code: "6300",
           name: "Marketing Expense",
-          accountType: AccountType.EXPENSE,
+          type: AccountType.EXPENSE,
+          subType: AccountSubType.OPERATING_EXPENSE,
           normalBalance: BalanceType.DEBIT,
           isActive: true,
           businessId: business.id,
@@ -212,7 +232,8 @@ async function seed() {
         {
           code: "6400",
           name: "Office Supplies",
-          accountType: AccountType.EXPENSE,
+          type: AccountType.EXPENSE,
+          subType: AccountSubType.OPERATING_EXPENSE,
           normalBalance: BalanceType.DEBIT,
           isActive: true,
           businessId: business.id,
@@ -220,7 +241,8 @@ async function seed() {
         {
           code: "6500",
           name: "Depreciation Expense",
-          accountType: AccountType.EXPENSE,
+          type: AccountType.EXPENSE,
+          subType: AccountSubType.OPERATING_EXPENSE,
           normalBalance: BalanceType.DEBIT,
           isActive: true,
           businessId: business.id,
@@ -228,7 +250,8 @@ async function seed() {
         {
           code: "6600",
           name: "Interest Expense",
-          accountType: AccountType.EXPENSE,
+          type: AccountType.EXPENSE,
+          subType: AccountSubType.OTHER_EXPENSE,
           normalBalance: BalanceType.DEBIT,
           isActive: true,
           businessId: business.id,
