@@ -2,15 +2,18 @@ import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import * as z from "zod";
 import { db } from "@/lib/db";
+import { currentUser } from "@/lib/current-user";
 
 const app = new Hono()
   // Get all businesses for current user
   .get("/", async (c) => {
-    // TODO: Get userId from auth session
-    const userId = "temp-user-id"; // Replace with actual auth
+    const user = await currentUser();
+    if (!user) {
+      return c.json({ error: "Unauthorized" }, 401);
+    }
 
     const businesses = await db.business.findMany({
-      where: { userId },
+      where: { userId: user.id },
       orderBy: { createdAt: "desc" },
     });
 
@@ -20,10 +23,13 @@ const app = new Hono()
   // Get single business
   .get("/:id", async (c) => {
     const id = c.req.param("id");
-    const userId = "temp-user-id"; // Replace with actual auth
+    const user = await currentUser();
+    if (!user) {
+      return c.json({ error: "Unauthorized" }, 401);
+    }
 
     const business = await db.business.findFirst({
-      where: { id, userId },
+      where: { id, userId: user.id },
       include: {
         _count: {
           select: {
@@ -59,12 +65,15 @@ const app = new Hono()
     ),
     async (c) => {
       const data = c.req.valid("json");
-      const userId = "temp-user-id"; // Replace with actual auth
+      const user = await currentUser();
+      if (!user) {
+        return c.json({ error: "Unauthorized" }, 401);
+      }
 
       const business = await db.business.create({
         data: {
           ...data,
-          userId,
+          userId: user.id,
         },
       });
 
@@ -90,10 +99,13 @@ const app = new Hono()
     async (c) => {
       const id = c.req.param("id");
       const data = c.req.valid("json");
-      const userId = "temp-user-id"; // Replace with actual auth
+      const user = await currentUser();
+      if (!user) {
+        return c.json({ error: "Unauthorized" }, 401);
+      }
 
       const business = await db.business.updateMany({
-        where: { id, userId },
+        where: { id, userId: user.id },
         data,
       });
 
@@ -108,10 +120,13 @@ const app = new Hono()
   // Delete business
   .delete("/:id", async (c) => {
     const id = c.req.param("id");
-    const userId = "temp-user-id"; // Replace with actual auth
+    const user = await currentUser();
+    if (!user) {
+      return c.json({ error: "Unauthorized" }, 401);
+    }
 
     const business = await db.business.deleteMany({
-      where: { id, userId },
+      where: { id, userId: user.id },
     });
 
     if (business.count === 0) {

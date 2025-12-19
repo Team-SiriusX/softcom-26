@@ -32,7 +32,7 @@ export default function DashboardPage() {
         <AlertCircle className="h-4 w-4" />
         <AlertTitle>No Business Selected</AlertTitle>
         <AlertDescription>
-          Please select a business from the dropdown above or{" "}
+          Please select a business from the header or{" "}
           <Link href="/business" className="font-medium underline">
             create a new one
           </Link>

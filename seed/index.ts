@@ -8,7 +8,8 @@ import {
   CategoryType,
 } from "@/generated/prisma";
 
-const userId = "HWyCyGjc5MopTM2d0gIJxvFtn5zMrAOo";
+// const userId = "HWyCyGjc5MopTM2d0gIJxvFtn5zMrAOo"; // Mohid
+const userId = "JAKDvi8b5aNLnjTn4PVP9fDVXwKqgfKH"; // Ahmad
 
 if (!userId) {
   console.error("Please provide a user ID");
@@ -273,30 +274,35 @@ async function seed() {
         {
           name: "Sales",
           description: "Product and service sales",
+          type: CategoryType.INCOME,
           color: "#10b981",
           businessId: business.id,
         },
         {
           name: "Operating Expenses",
           description: "Day-to-day business expenses",
+          type: CategoryType.EXPENSE,
           color: "#ef4444",
           businessId: business.id,
         },
         {
           name: "Payroll",
           description: "Employee salaries and wages",
+          type: CategoryType.EXPENSE,
           color: "#f59e0b",
           businessId: business.id,
         },
         {
           name: "Marketing",
           description: "Marketing and advertising costs",
+          type: CategoryType.EXPENSE,
           color: "#8b5cf6",
           businessId: business.id,
         },
         {
           name: "Capital",
           description: "Owner investments and equity",
+          type: CategoryType.TRANSFER,
           color: "#06b6d4",
           businessId: business.id,
         },
@@ -321,21 +327,28 @@ async function seed() {
         date: new Date("2024-01-01"),
         description: "Initial capital investment by owner",
         amount: 100000,
-        transactionType: TransactionType.EQUITY,
+        type: TransactionType.TRANSFER,
+        ledgerAccountId: accountMap.get("1000")!.id,
         isReconciled: true,
         businessId: business.id,
         categoryId: categoryMap.get("Capital")?.id,
         journalEntries: {
           create: [
             {
-              entryType: EntryType.DEBIT,
+              date: new Date("2024-01-01"),
+              entryNumber: "JE-001",
+              description: "Cash received from owner investment",
+              entryType: EntryType.STANDARD,
               debitAmount: 100000,
               creditAmount: 0,
               ledgerAccountId: accountMap.get("1000")!.id,
               businessId: business.id,
             },
             {
-              entryType: EntryType.CREDIT,
+              date: new Date("2024-01-01"),
+              entryNumber: "JE-002",
+              description: "Owner's capital investment",
+              entryType: EntryType.STANDARD,
               debitAmount: 0,
               creditAmount: 100000,
               ledgerAccountId: accountMap.get("3000")!.id,
@@ -349,11 +362,11 @@ async function seed() {
     // Update account balances for transaction 1
     await db.ledgerAccount.update({
       where: { id: accountMap.get("1000")!.id },
-      data: { debit: 100000, credit: 0, balance: 100000 },
+      data: { currentBalance: 100000 },
     });
     await db.ledgerAccount.update({
       where: { id: accountMap.get("3000")!.id },
-      data: { debit: 0, credit: 100000, balance: 100000 },
+      data: { currentBalance: 100000 },
     });
 
     // Transaction 2: Purchase equipment
@@ -362,21 +375,28 @@ async function seed() {
         date: new Date("2024-01-05"),
         description: "Purchase of office equipment",
         amount: 25000,
-        transactionType: TransactionType.EXPENSE,
+        type: TransactionType.EXPENSE,
+        ledgerAccountId: accountMap.get("1500")!.id,
         isReconciled: true,
         businessId: business.id,
         categoryId: categoryMap.get("Operating Expenses")?.id,
         journalEntries: {
           create: [
             {
-              entryType: EntryType.DEBIT,
+              date: new Date("2024-01-05"),
+              entryNumber: "JE-003",
+              description: "Equipment purchase",
+              entryType: EntryType.STANDARD,
               debitAmount: 25000,
               creditAmount: 0,
               ledgerAccountId: accountMap.get("1500")!.id,
               businessId: business.id,
             },
             {
-              entryType: EntryType.CREDIT,
+              date: new Date("2024-01-05"),
+              entryNumber: "JE-004",
+              description: "Cash paid for equipment",
+              entryType: EntryType.STANDARD,
               debitAmount: 0,
               creditAmount: 25000,
               ledgerAccountId: accountMap.get("1000")!.id,
@@ -389,11 +409,11 @@ async function seed() {
 
     await db.ledgerAccount.update({
       where: { id: accountMap.get("1500")!.id },
-      data: { debit: 25000, credit: 0, balance: 25000 },
+      data: { currentBalance: 25000 },
     });
     await db.ledgerAccount.update({
       where: { id: accountMap.get("1000")!.id },
-      data: { debit: 100000, credit: 25000, balance: 75000 },
+      data: { currentBalance: 75000 },
     });
 
     // Transaction 3: Sales revenue
@@ -402,21 +422,28 @@ async function seed() {
         date: new Date("2024-01-10"),
         description: "Sales revenue for January - Week 1",
         amount: 15000,
-        transactionType: TransactionType.INCOME,
+        type: TransactionType.INCOME,
+        ledgerAccountId: accountMap.get("1000")!.id,
         isReconciled: true,
         businessId: business.id,
         categoryId: categoryMap.get("Sales")?.id,
         journalEntries: {
           create: [
             {
-              entryType: EntryType.DEBIT,
+              date: new Date("2024-01-10"),
+              entryNumber: "JE-005",
+              description: "Cash received from sales",
+              entryType: EntryType.STANDARD,
               debitAmount: 15000,
               creditAmount: 0,
               ledgerAccountId: accountMap.get("1000")!.id,
               businessId: business.id,
             },
             {
-              entryType: EntryType.CREDIT,
+              date: new Date("2024-01-10"),
+              entryNumber: "JE-006",
+              description: "Sales revenue earned",
+              entryType: EntryType.STANDARD,
               debitAmount: 0,
               creditAmount: 15000,
               ledgerAccountId: accountMap.get("4000")!.id,
@@ -429,11 +456,11 @@ async function seed() {
 
     await db.ledgerAccount.update({
       where: { id: accountMap.get("1000")!.id },
-      data: { debit: 115000, credit: 25000, balance: 90000 },
+      data: { currentBalance: 90000 },
     });
     await db.ledgerAccount.update({
       where: { id: accountMap.get("4000")!.id },
-      data: { debit: 0, credit: 15000, balance: 15000 },
+      data: { currentBalance: 15000 },
     });
 
     // Transaction 4: Rent expense
@@ -442,21 +469,28 @@ async function seed() {
         date: new Date("2024-01-15"),
         description: "Office rent payment for January",
         amount: 3000,
-        transactionType: TransactionType.EXPENSE,
+        type: TransactionType.EXPENSE,
+        ledgerAccountId: accountMap.get("6100")!.id,
         isReconciled: true,
         businessId: business.id,
         categoryId: categoryMap.get("Operating Expenses")?.id,
         journalEntries: {
           create: [
             {
-              entryType: EntryType.DEBIT,
+              date: new Date("2024-01-15"),
+              entryNumber: "JE-007",
+              description: "Rent expense",
+              entryType: EntryType.STANDARD,
               debitAmount: 3000,
               creditAmount: 0,
               ledgerAccountId: accountMap.get("6100")!.id,
               businessId: business.id,
             },
             {
-              entryType: EntryType.CREDIT,
+              date: new Date("2024-01-15"),
+              entryNumber: "JE-008",
+              description: "Cash paid for rent",
+              entryType: EntryType.STANDARD,
               debitAmount: 0,
               creditAmount: 3000,
               ledgerAccountId: accountMap.get("1000")!.id,
@@ -469,11 +503,11 @@ async function seed() {
 
     await db.ledgerAccount.update({
       where: { id: accountMap.get("6100")!.id },
-      data: { debit: 3000, credit: 0, balance: 3000 },
+      data: { currentBalance: 3000 },
     });
     await db.ledgerAccount.update({
       where: { id: accountMap.get("1000")!.id },
-      data: { debit: 115000, credit: 28000, balance: 87000 },
+      data: { currentBalance: 87000 },
     });
 
     // Transaction 5: Salary payment
@@ -482,21 +516,28 @@ async function seed() {
         date: new Date("2024-01-20"),
         description: "Employee salaries for January",
         amount: 12000,
-        transactionType: TransactionType.EXPENSE,
+        type: TransactionType.EXPENSE,
+        ledgerAccountId: accountMap.get("6000")!.id,
         isReconciled: true,
         businessId: business.id,
         categoryId: categoryMap.get("Payroll")?.id,
         journalEntries: {
           create: [
             {
-              entryType: EntryType.DEBIT,
+              date: new Date("2024-01-20"),
+              entryNumber: "JE-009",
+              description: "Salaries expense",
+              entryType: EntryType.STANDARD,
               debitAmount: 12000,
               creditAmount: 0,
               ledgerAccountId: accountMap.get("6000")!.id,
               businessId: business.id,
             },
             {
-              entryType: EntryType.CREDIT,
+              date: new Date("2024-01-20"),
+              entryNumber: "JE-010",
+              description: "Cash paid for salaries",
+              entryType: EntryType.STANDARD,
               debitAmount: 0,
               creditAmount: 12000,
               ledgerAccountId: accountMap.get("1000")!.id,
@@ -509,11 +550,11 @@ async function seed() {
 
     await db.ledgerAccount.update({
       where: { id: accountMap.get("6000")!.id },
-      data: { debit: 12000, credit: 0, balance: 12000 },
+      data: { currentBalance: 12000 },
     });
     await db.ledgerAccount.update({
       where: { id: accountMap.get("1000")!.id },
-      data: { debit: 115000, credit: 40000, balance: 75000 },
+      data: { currentBalance: 75000 },
     });
 
     // Transaction 6: Marketing expense
@@ -522,21 +563,28 @@ async function seed() {
         date: new Date("2024-01-25"),
         description: "Digital marketing campaign",
         amount: 2500,
-        transactionType: TransactionType.EXPENSE,
+        type: TransactionType.EXPENSE,
+        ledgerAccountId: accountMap.get("6300")!.id,
         isReconciled: true,
         businessId: business.id,
         categoryId: categoryMap.get("Marketing")?.id,
         journalEntries: {
           create: [
             {
-              entryType: EntryType.DEBIT,
+              date: new Date("2024-01-25"),
+              entryNumber: "JE-011",
+              description: "Marketing expense",
+              entryType: EntryType.STANDARD,
               debitAmount: 2500,
               creditAmount: 0,
               ledgerAccountId: accountMap.get("6300")!.id,
               businessId: business.id,
             },
             {
-              entryType: EntryType.CREDIT,
+              date: new Date("2024-01-25"),
+              entryNumber: "JE-012",
+              description: "Cash paid for marketing",
+              entryType: EntryType.STANDARD,
               debitAmount: 0,
               creditAmount: 2500,
               ledgerAccountId: accountMap.get("1000")!.id,
@@ -549,11 +597,11 @@ async function seed() {
 
     await db.ledgerAccount.update({
       where: { id: accountMap.get("6300")!.id },
-      data: { debit: 2500, credit: 0, balance: 2500 },
+      data: { currentBalance: 2500 },
     });
     await db.ledgerAccount.update({
       where: { id: accountMap.get("1000")!.id },
-      data: { debit: 115000, credit: 42500, balance: 72500 },
+      data: { currentBalance: 72500 },
     });
 
     // Transaction 7: Service revenue
@@ -562,21 +610,28 @@ async function seed() {
         date: new Date("2024-01-28"),
         description: "Consulting services revenue",
         amount: 8500,
-        transactionType: TransactionType.INCOME,
+        type: TransactionType.INCOME,
+        ledgerAccountId: accountMap.get("1000")!.id,
         isReconciled: true,
         businessId: business.id,
         categoryId: categoryMap.get("Sales")?.id,
         journalEntries: {
           create: [
             {
-              entryType: EntryType.DEBIT,
+              date: new Date("2024-01-28"),
+              entryNumber: "JE-013",
+              description: "Cash received from services",
+              entryType: EntryType.STANDARD,
               debitAmount: 8500,
               creditAmount: 0,
               ledgerAccountId: accountMap.get("1000")!.id,
               businessId: business.id,
             },
             {
-              entryType: EntryType.CREDIT,
+              date: new Date("2024-01-28"),
+              entryNumber: "JE-014",
+              description: "Service revenue earned",
+              entryType: EntryType.STANDARD,
               debitAmount: 0,
               creditAmount: 8500,
               ledgerAccountId: accountMap.get("4100")!.id,
@@ -589,11 +644,11 @@ async function seed() {
 
     await db.ledgerAccount.update({
       where: { id: accountMap.get("1000")!.id },
-      data: { debit: 123500, credit: 42500, balance: 81000 },
+      data: { currentBalance: 81000 },
     });
     await db.ledgerAccount.update({
       where: { id: accountMap.get("4100")!.id },
-      data: { debit: 0, credit: 8500, balance: 8500 },
+      data: { currentBalance: 8500 },
     });
 
     // Transaction 8: Utilities
@@ -602,21 +657,28 @@ async function seed() {
         date: new Date("2024-01-30"),
         description: "Electricity and water bills",
         amount: 450,
-        transactionType: TransactionType.EXPENSE,
+        type: TransactionType.EXPENSE,
+        ledgerAccountId: accountMap.get("6200")!.id,
         isReconciled: false,
         businessId: business.id,
         categoryId: categoryMap.get("Operating Expenses")?.id,
         journalEntries: {
           create: [
             {
-              entryType: EntryType.DEBIT,
+              date: new Date("2024-01-30"),
+              entryNumber: "JE-015",
+              description: "Utilities expense",
+              entryType: EntryType.STANDARD,
               debitAmount: 450,
               creditAmount: 0,
               ledgerAccountId: accountMap.get("6200")!.id,
               businessId: business.id,
             },
             {
-              entryType: EntryType.CREDIT,
+              date: new Date("2024-01-30"),
+              entryNumber: "JE-016",
+              description: "Cash paid for utilities",
+              entryType: EntryType.STANDARD,
               debitAmount: 0,
               creditAmount: 450,
               ledgerAccountId: accountMap.get("1000")!.id,
@@ -629,71 +691,14 @@ async function seed() {
 
     await db.ledgerAccount.update({
       where: { id: accountMap.get("6200")!.id },
-      data: { debit: 450, credit: 0, balance: 450 },
+      data: { currentBalance: 450 },
     });
     await db.ledgerAccount.update({
       where: { id: accountMap.get("1000")!.id },
-      data: { debit: 123500, credit: 42950, balance: 80550 },
+      data: { currentBalance: 80550 },
     });
 
     console.log("✅ Created 8 sample transactions with journal entries");
-
-    // Create a financial insight
-    console.log("\nCreating financial insights...");
-    await db.financialInsight.create({
-      data: {
-        title: "Strong Cash Position",
-        content:
-          "Your business maintains a healthy cash balance of $80,550. This provides good liquidity for operational needs and unexpected expenses. Consider investing excess cash in short-term instruments for better returns.",
-        type: "recommendation",
-        priority: "medium",
-        metadata: {
-          cashBalance: 80550,
-          quickRatio: 2.5,
-          currentRatio: 3.2,
-        },
-        businessId: business.id,
-      },
-    });
-
-    await db.financialInsight.create({
-      data: {
-        title: "Revenue Growth Opportunity",
-        content:
-          "January revenue totals $23,500 from sales and services. Based on current trends, consider expanding marketing efforts to capitalize on strong service revenue performance (36% of total revenue).",
-        type: "insight",
-        priority: "high",
-        metadata: {
-          totalRevenue: 23500,
-          salesRevenue: 15000,
-          serviceRevenue: 8500,
-        },
-        businessId: business.id,
-      },
-    });
-
-    console.log("✅ Created 2 financial insights");
-
-    // Create a chat message
-    console.log("\nCreating AI chat messages...");
-    await db.chatMessage.create({
-      data: {
-        role: "user",
-        content: "What's my current cash position and burn rate?",
-        businessId: business.id,
-      },
-    });
-
-    await db.chatMessage.create({
-      data: {
-        role: "assistant",
-        content:
-          "Based on your January financials:\n\n💰 **Cash Position**: $80,550\n📉 **Monthly Burn Rate**: ~$17,950/month\n⏱️ **Runway**: Approximately 4.5 months at current burn rate\n\n**Breakdown:**\n- Operating Expenses: $5,950\n- Payroll: $12,000\n\nYour revenue of $23,500 covers your expenses, leaving you cash-flow positive. Keep monitoring your burn rate as you scale operations.",
-        businessId: business.id,
-      },
-    });
-
-    console.log("✅ Created 2 chat messages");
 
     console.log("\n🎉 Database seeded successfully!");
     console.log("\n📊 Summary:");
@@ -701,8 +706,7 @@ async function seed() {
     console.log(`- Ledger Accounts: ${accounts.count}`);
     console.log(`- Categories: ${categories.count}`);
     console.log("- Transactions: 8");
-    console.log("- Financial Insights: 2");
-    console.log("- Chat Messages: 2");
+    console.log("- Journal Entries: 16");
     console.log(`\n💡 Business ID: ${business.id}`);
   } catch (error) {
     console.error("❌ Error seeding database:", error);

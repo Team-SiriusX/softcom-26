@@ -61,8 +61,12 @@ export default function TransactionsPage() {
     selectedBusinessId || undefined,
     { type: typeFilter }
   );
-  const { data: accounts } = useGetLedgerAccounts(selectedBusinessId || undefined);
-  const { data: categories } = useGetCategories(selectedBusinessId || undefined);
+  const { data: accounts } = useGetLedgerAccounts(
+    selectedBusinessId || undefined
+  );
+  const { data: categories } = useGetCategories(
+    selectedBusinessId || undefined
+  );
   const deleteMutation = useDeleteTransaction();
   const reconcileMutation = useReconcileTransaction();
 
@@ -72,7 +76,7 @@ export default function TransactionsPage() {
         <AlertCircle className="h-4 w-4" />
         <AlertTitle>No Business Selected</AlertTitle>
         <AlertDescription>
-          Please select a business from the dropdown above or{" "}
+          Please select a business from the header or{" "}
           <Link href="/business" className="font-medium underline">
             create a new one
           </Link>
@@ -122,12 +126,17 @@ export default function TransactionsPage() {
           <div className="grid gap-4 md:grid-cols-4">
             <div>
               <label className="text-sm font-medium mb-2 block">Type</label>
-              <Select value={typeFilter} onValueChange={setTypeFilter}>
+              <Select
+                value={typeFilter}
+                onValueChange={(value) =>
+                  setTypeFilter(value === "ALL" ? undefined : value)
+                }
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="All types" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All types</SelectItem>
+                  <SelectItem value="ALL">All types</SelectItem>
                   <SelectItem value="INCOME">Income</SelectItem>
                   <SelectItem value="EXPENSE">Expense</SelectItem>
                   <SelectItem value="TRANSFER">Transfer</SelectItem>
@@ -150,7 +159,9 @@ export default function TransactionsPage() {
           {transactions.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-[300px] text-center">
               <AlertCircle className="h-12 w-12 text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold mb-2">No transactions yet</h3>
+              <h3 className="text-lg font-semibold mb-2">
+                No transactions yet
+              </h3>
               <p className="text-muted-foreground mb-4">
                 Get started by recording your first transaction
               </p>
@@ -229,7 +240,11 @@ export default function TransactionsPage() {
                               : ""
                           }
                         >
-                          {transaction.type === "INCOME" ? "+" : transaction.type === "EXPENSE" ? "-" : ""}
+                          {transaction.type === "INCOME"
+                            ? "+"
+                            : transaction.type === "EXPENSE"
+                            ? "-"
+                            : ""}
                           ${Number(transaction.amount).toLocaleString()}
                         </span>
                       </TableCell>

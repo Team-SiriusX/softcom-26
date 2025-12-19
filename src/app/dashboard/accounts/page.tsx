@@ -55,7 +55,7 @@ export default function AccountsPage() {
         <AlertCircle className="h-4 w-4" />
         <AlertTitle>No Business Selected</AlertTitle>
         <AlertDescription>
-          Please select a business from the dropdown above or{" "}
+          Please select a business from the header or{" "}
           <Link href="/business" className="font-medium underline">
             create a new one
           </Link>
@@ -137,7 +137,7 @@ export default function AccountsPage() {
               <SelectValue placeholder="All types" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All types</SelectItem>
+              <SelectItem value="ALL">All types</SelectItem>
               <SelectItem value="ASSET">Assets</SelectItem>
               <SelectItem value="LIABILITY">Liabilities</SelectItem>
               <SelectItem value="EQUITY">Equity</SelectItem>
