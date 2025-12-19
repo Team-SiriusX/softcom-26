@@ -52,10 +52,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { TransactionFormDialog } from "./_components/transaction-form-dialog";
 
 export default function TransactionsPage() {
   const { selectedBusinessId } = useSelectedBusiness();
   const [typeFilter, setTypeFilter] = useState<string | undefined>();
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
 
   const { data: transactionsData, isLoading } = useGetTransactions(
     selectedBusinessId || undefined,
@@ -110,12 +112,17 @@ export default function TransactionsPage() {
             <Download className="mr-2 h-4 w-4" />
             Export
           </Button>
-          <Button>
+          <Button onClick={() => setIsCreateOpen(true)}>
             <Plus className="mr-2 h-4 w-4" />
             Add Transaction
           </Button>
         </div>
       </div>
+
+      <TransactionFormDialog
+        open={isCreateOpen}
+        onOpenChange={setIsCreateOpen}
+      />
 
       {/* Filters */}
       <Card>
@@ -165,7 +172,7 @@ export default function TransactionsPage() {
               <p className="text-muted-foreground mb-4">
                 Get started by recording your first transaction
               </p>
-              <Button>
+              <Button onClick={() => setIsCreateOpen(true)}>
                 <Plus className="mr-2 h-4 w-4" />
                 Add Transaction
               </Button>

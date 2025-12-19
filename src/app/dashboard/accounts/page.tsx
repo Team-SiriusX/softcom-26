@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useSelectedBusiness } from "@/components/providers/business-provider";
 import { useGetLedgerAccounts } from "@/hooks/use-ledger-accounts";
 import {
@@ -30,7 +31,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useState } from "react";
+import { AccountFormDialog } from "./_components/account-form-dialog";
 
 const accountTypeColors: Record<string, string> = {
   ASSET: "bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400",
@@ -43,6 +44,7 @@ const accountTypeColors: Record<string, string> = {
 export default function AccountsPage() {
   const { selectedBusinessId } = useSelectedBusiness();
   const [typeFilter, setTypeFilter] = useState<string | undefined>();
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
 
   const { data: accounts, isLoading } = useGetLedgerAccounts(
     selectedBusinessId || undefined,
@@ -93,11 +95,16 @@ export default function AccountsPage() {
             Manage your account structure and balances
           </p>
         </div>
-        <Button>
+        <Button onClick={() => setIsCreateOpen(true)}>
           <Plus className="mr-2 h-4 w-4" />
           Add Account
         </Button>
       </div>
+
+      <AccountFormDialog
+        open={isCreateOpen}
+        onOpenChange={setIsCreateOpen}
+      />
 
       {/* Summary Cards */}
       <div className="grid gap-4 md:grid-cols-5">

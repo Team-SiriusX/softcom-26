@@ -100,3 +100,77 @@ export const useGetTopExpenses = (
     enabled: !!businessId && !!startDate && !!endDate,
   });
 };
+
+// Get balance sheet
+export const useGetBalanceSheet = (businessId?: string, date?: string) => {
+  return useQuery({
+    queryKey: ["analytics", "balance-sheet", businessId, date],
+    queryFn: async () => {
+      if (!businessId) return null;
+
+      const query: any = { businessId };
+      if (date) query.date = date;
+
+      const response = await client.api.analytics["balance-sheet"].$get({
+        query,
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch balance sheet");
+      }
+
+      return await response.json();
+    },
+    enabled: !!businessId,
+  });
+};
+
+// Get profit & loss statement
+export const useGetProfitLoss = (
+  businessId?: string,
+  startDate?: string,
+  endDate?: string
+) => {
+  return useQuery({
+    queryKey: ["analytics", "profit-loss", businessId, startDate, endDate],
+    queryFn: async () => {
+      if (!businessId || !startDate || !endDate) return null;
+
+      const response = await client.api.analytics["profit-loss"].$get({
+        query: { businessId, startDate, endDate },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch profit & loss");
+      }
+
+      return await response.json();
+    },
+    enabled: !!businessId && !!startDate && !!endDate,
+  });
+};
+
+// Get cash flow statement
+export const useGetCashFlow = (
+  businessId?: string,
+  startDate?: string,
+  endDate?: string
+) => {
+  return useQuery({
+    queryKey: ["analytics", "cash-flow", businessId, startDate, endDate],
+    queryFn: async () => {
+      if (!businessId || !startDate || !endDate) return null;
+
+      const response = await client.api.analytics["cash-flow"].$get({
+        query: { businessId, startDate, endDate },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch cash flow");
+      }
+
+      return await response.json();
+    },
+    enabled: !!businessId && !!startDate && !!endDate,
+  });
+};

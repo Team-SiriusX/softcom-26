@@ -14,6 +14,7 @@ import {
   PieChart,
   Settings,
   Building2,
+  Tag,
 } from "lucide-react";
 
 const navigation = [
@@ -31,6 +32,11 @@ const navigation = [
     name: "Chart of Accounts",
     href: "/dashboard/accounts",
     icon: BookOpen,
+  },
+  {
+    name: "Categories",
+    href: "/dashboard/categories",
+    icon: Tag,
   },
   {
     name: "Reports",
