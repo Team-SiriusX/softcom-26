@@ -8,8 +8,8 @@ import {
   CategoryType,
 } from "@/generated/prisma";
 
-const userId = "HWyCyGjc5MopTM2d0gIJxvFtn5zMrAOo"; // Mohid
-// const userId = "JAKDvi8b5aNLnjTn4PVP9fDVXwKqgfKH"; // Ahmad
+// const userId = "HWyCyGjc5MopTM2d0gIJxvFtn5zMrAOo"; // Mohid
+const userId = "JAKDvi8b5aNLnjTn4PVP9fDVXwKqgfKH"; // Ahmad
 
 if (!userId) {
   console.error("Please provide a user ID");
@@ -365,7 +365,7 @@ async function seed() {
     // Transaction 1: Owner's initial capital investment
     const transaction1 = await db.transaction.create({
       data: {
-        date: new Date("2025-07-01"),
+        date: new Date("2025-10-20"),
         description: "Initial capital investment by owner",
         amount: 100000,
         type: TransactionType.TRANSFER,
@@ -376,7 +376,7 @@ async function seed() {
         journalEntries: {
           create: [
             {
-              date: new Date("2025-07-01"),
+              date: new Date("2025-10-20"),
               entryNumber: "JE-001",
               description: "Cash received from owner investment",
               entryType: EntryType.STANDARD,
@@ -386,7 +386,7 @@ async function seed() {
               businessId: business.id,
             },
             {
-              date: new Date("2025-07-01"),
+              date: new Date("2025-10-20"),
               entryNumber: "JE-002",
               description: "Owner's capital investment",
               entryType: EntryType.STANDARD,
@@ -413,7 +413,7 @@ async function seed() {
     // Transaction 2: Purchase equipment
     const transaction2 = await db.transaction.create({
       data: {
-        date: new Date("2025-07-15"),
+        date: new Date("2025-10-22"),
         description: "Purchase of office equipment",
         amount: 25000,
         type: TransactionType.EXPENSE,
@@ -424,7 +424,7 @@ async function seed() {
         journalEntries: {
           create: [
             {
-              date: new Date("2025-07-15"),
+              date: new Date("2025-10-22"),
               entryNumber: "JE-003",
               description: "Equipment purchase",
               entryType: EntryType.STANDARD,
@@ -434,7 +434,7 @@ async function seed() {
               businessId: business.id,
             },
             {
-              date: new Date("2025-07-15"),
+              date: new Date("2025-10-22"),
               entryNumber: "JE-004",
               description: "Cash paid for equipment",
               entryType: EntryType.STANDARD,
@@ -460,8 +460,8 @@ async function seed() {
     // Transaction 3: Sales revenue
     const transaction3 = await db.transaction.create({
       data: {
-        date: new Date("2025-08-05"),
-        description: "Sales revenue for August - Week 1",
+        date: new Date("2025-10-25"),
+        description: "Sales revenue for October - Week 1",
         amount: 15000,
         type: TransactionType.INCOME,
         ledgerAccountId: accountMap.get("1000")!.id,
@@ -471,7 +471,7 @@ async function seed() {
         journalEntries: {
           create: [
             {
-              date: new Date("2025-08-05"),
+              date: new Date("2025-10-25"),
               entryNumber: "JE-005",
               description: "Cash received from sales",
               entryType: EntryType.STANDARD,
@@ -481,7 +481,7 @@ async function seed() {
               businessId: business.id,
             },
             {
-              date: new Date("2025-08-05"),
+              date: new Date("2025-10-25"),
               entryNumber: "JE-006",
               description: "Sales revenue earned",
               entryType: EntryType.STANDARD,
@@ -507,8 +507,8 @@ async function seed() {
     // Transaction 4: Rent expense
     const transaction4 = await db.transaction.create({
       data: {
-        date: new Date("2025-08-15"),
-        description: "Office rent payment for August",
+        date: new Date("2025-10-28"),
+        description: "Office rent payment for October",
         amount: 3000,
         type: TransactionType.EXPENSE,
         ledgerAccountId: accountMap.get("6100")!.id,
@@ -518,7 +518,7 @@ async function seed() {
         journalEntries: {
           create: [
             {
-              date: new Date("2025-08-15"),
+              date: new Date("2025-10-28"),
               entryNumber: "JE-007",
               description: "Rent expense",
               entryType: EntryType.STANDARD,
@@ -528,7 +528,7 @@ async function seed() {
               businessId: business.id,
             },
             {
-              date: new Date("2025-08-15"),
+              date: new Date("2025-10-28"),
               entryNumber: "JE-008",
               description: "Cash paid for rent",
               entryType: EntryType.STANDARD,
@@ -554,8 +554,8 @@ async function seed() {
     // Transaction 5: Salary payment
     const transaction5 = await db.transaction.create({
       data: {
-        date: new Date("2025-09-01"),
-        description: "Employee salaries for August",
+        date: new Date("2025-11-01"),
+        description: "Employee salaries for October",
         amount: 12000,
         type: TransactionType.EXPENSE,
         ledgerAccountId: accountMap.get("6000")!.id,
@@ -565,7 +565,7 @@ async function seed() {
         journalEntries: {
           create: [
             {
-              date: new Date("2025-09-01"),
+              date: new Date("2025-11-01"),
               entryNumber: "JE-009",
               description: "Salaries expense",
               entryType: EntryType.STANDARD,
@@ -575,7 +575,7 @@ async function seed() {
               businessId: business.id,
             },
             {
-              date: new Date("2025-09-01"),
+              date: new Date("2025-11-01"),
               entryNumber: "JE-010",
               description: "Cash paid for salaries",
               entryType: EntryType.STANDARD,
@@ -601,7 +601,7 @@ async function seed() {
     // Transaction 6: Marketing expense
     const transaction6 = await db.transaction.create({
       data: {
-        date: new Date("2025-09-15"),
+        date: new Date("2025-11-05"),
         description: "Digital marketing campaign",
         amount: 2500,
         type: TransactionType.EXPENSE,
@@ -612,7 +612,7 @@ async function seed() {
         journalEntries: {
           create: [
             {
-              date: new Date("2025-09-15"),
+              date: new Date("2025-11-05"),
               entryNumber: "JE-011",
               description: "Marketing expense",
               entryType: EntryType.STANDARD,
@@ -622,7 +622,7 @@ async function seed() {
               businessId: business.id,
             },
             {
-              date: new Date("2025-09-15"),
+              date: new Date("2025-11-05"),
               entryNumber: "JE-012",
               description: "Cash paid for marketing",
               entryType: EntryType.STANDARD,
@@ -648,7 +648,7 @@ async function seed() {
     // Transaction 7: Service revenue
     const transaction7 = await db.transaction.create({
       data: {
-        date: new Date("2025-10-01"),
+        date: new Date("2025-11-08"),
         description: "Consulting services revenue",
         amount: 8500,
         type: TransactionType.INCOME,
@@ -659,7 +659,7 @@ async function seed() {
         journalEntries: {
           create: [
             {
-              date: new Date("2025-10-01"),
+              date: new Date("2025-11-08"),
               entryNumber: "JE-013",
               description: "Cash received from services",
               entryType: EntryType.STANDARD,
@@ -669,7 +669,7 @@ async function seed() {
               businessId: business.id,
             },
             {
-              date: new Date("2025-10-01"),
+              date: new Date("2025-11-08"),
               entryNumber: "JE-014",
               description: "Service revenue earned",
               entryType: EntryType.STANDARD,
@@ -695,7 +695,7 @@ async function seed() {
     // Transaction 8: Utilities
     const transaction8 = await db.transaction.create({
       data: {
-        date: new Date("2025-10-15"),
+        date: new Date("2025-11-10"),
         description: "Electricity and water bills",
         amount: 450,
         type: TransactionType.EXPENSE,
@@ -706,7 +706,7 @@ async function seed() {
         journalEntries: {
           create: [
             {
-              date: new Date("2025-10-15"),
+              date: new Date("2025-11-10"),
               entryNumber: "JE-015",
               description: "Utilities expense",
               entryType: EntryType.STANDARD,
@@ -716,7 +716,7 @@ async function seed() {
               businessId: business.id,
             },
             {
-              date: new Date("2025-10-15"),
+              date: new Date("2025-11-10"),
               entryNumber: "JE-016",
               description: "Cash paid for utilities",
               entryType: EntryType.STANDARD,
@@ -742,7 +742,7 @@ async function seed() {
     // Transaction 9: Additional sales revenue (November)
     const transaction9 = await db.transaction.create({
       data: {
-        date: new Date("2025-11-01"),
+        date: new Date("2025-11-12"),
         description: "Product sales - Electronics",
         amount: 22000,
         type: TransactionType.INCOME,
@@ -753,7 +753,7 @@ async function seed() {
         journalEntries: {
           create: [
             {
-              date: new Date("2025-11-01"),
+              date: new Date("2025-11-12"),
               entryNumber: "JE-017",
               description: "Cash from electronics sales",
               entryType: EntryType.STANDARD,
@@ -763,7 +763,7 @@ async function seed() {
               businessId: business.id,
             },
             {
-              date: new Date("2025-11-01"),
+              date: new Date("2025-11-12"),
               entryNumber: "JE-018",
               description: "Sales revenue - Electronics",
               entryType: EntryType.STANDARD,
@@ -789,7 +789,7 @@ async function seed() {
     // Transaction 10: Office supplies purchase
     const transaction10 = await db.transaction.create({
       data: {
-        date: new Date("2025-11-05"),
+        date: new Date("2025-11-15"),
         description: "Office supplies and stationery",
         amount: 850,
         type: TransactionType.EXPENSE,
@@ -800,7 +800,7 @@ async function seed() {
         journalEntries: {
           create: [
             {
-              date: new Date("2025-11-05"),
+              date: new Date("2025-11-15"),
               entryNumber: "JE-019",
               description: "Office supplies expense",
               entryType: EntryType.STANDARD,
@@ -810,7 +810,7 @@ async function seed() {
               businessId: business.id,
             },
             {
-              date: new Date("2025-11-05"),
+              date: new Date("2025-11-15"),
               entryNumber: "JE-020",
               description: "Cash paid for supplies",
               entryType: EntryType.STANDARD,
@@ -836,7 +836,7 @@ async function seed() {
     // Transaction 11: Loan taken (November)
     const transaction11 = await db.transaction.create({
       data: {
-        date: new Date("2025-11-10"),
+        date: new Date("2025-11-18"),
         description: "Business loan from bank",
         amount: 50000,
         type: TransactionType.TRANSFER,
@@ -847,7 +847,7 @@ async function seed() {
         journalEntries: {
           create: [
             {
-              date: new Date("2025-11-10"),
+              date: new Date("2025-11-18"),
               entryNumber: "JE-021",
               description: "Cash received from loan",
               entryType: EntryType.STANDARD,
@@ -857,7 +857,7 @@ async function seed() {
               businessId: business.id,
             },
             {
-              date: new Date("2025-11-10"),
+              date: new Date("2025-11-18"),
               entryNumber: "JE-022",
               description: "Loan payable",
               entryType: EntryType.STANDARD,
@@ -883,7 +883,7 @@ async function seed() {
     // Transaction 12: Inventory purchase
     const transaction12 = await db.transaction.create({
       data: {
-        date: new Date("2025-11-15"),
+        date: new Date("2025-11-22"),
         description: "Inventory purchase for resale",
         amount: 18000,
         type: TransactionType.EXPENSE,
@@ -894,7 +894,7 @@ async function seed() {
         journalEntries: {
           create: [
             {
-              date: new Date("2025-11-15"),
+              date: new Date("2025-11-22"),
               entryNumber: "JE-023",
               description: "Inventory purchased",
               entryType: EntryType.STANDARD,
@@ -904,7 +904,7 @@ async function seed() {
               businessId: business.id,
             },
             {
-              date: new Date("2025-11-15"),
+              date: new Date("2025-11-22"),
               entryNumber: "JE-024",
               description: "Cash paid for inventory",
               entryType: EntryType.STANDARD,
@@ -930,7 +930,7 @@ async function seed() {
     // Transaction 13: Large service contract (November)
     const transaction13 = await db.transaction.create({
       data: {
-        date: new Date("2025-11-20"),
+        date: new Date("2025-11-25"),
         description: "Enterprise consulting contract",
         amount: 35000,
         type: TransactionType.INCOME,
@@ -941,7 +941,7 @@ async function seed() {
         journalEntries: {
           create: [
             {
-              date: new Date("2025-11-20"),
+              date: new Date("2025-11-25"),
               entryNumber: "JE-025",
               description: "Cash from consulting contract",
               entryType: EntryType.STANDARD,
@@ -951,7 +951,7 @@ async function seed() {
               businessId: business.id,
             },
             {
-              date: new Date("2025-11-20"),
+              date: new Date("2025-11-25"),
               entryNumber: "JE-026",
               description: "Consulting service revenue",
               entryType: EntryType.STANDARD,
@@ -1310,7 +1310,7 @@ async function seed() {
     console.log(`- Business: ${business.name}`);
     console.log(`- Ledger Accounts: ${accounts.count}`);
     console.log(`- Categories: ${categories.count}`);
-    console.log("- Transactions: 20 (spanning Jul-Dec 2025)");
+    console.log("- Transactions: 20 (spanning Oct 20 - Dec 20, 2025)");
     console.log("- Journal Entries: 40");
     console.log(`- Final Cash Balance: $180,625`);
     console.log(`\n💡 Business ID: ${business.id}`);
