@@ -10,6 +10,7 @@ const compat = new FlatCompat({
 });
 
 const eslintConfig = [
+  ...compat.extends("next/core-web-vitals", "next/typescript"),
   {
     ignores: [
       "node_modules/**",
@@ -20,13 +21,11 @@ const eslintConfig = [
       "src/generated/**",
       "**/generated/**",
     ],
-  },
-  ...compat.extends("next/core-web-vitals", "next/typescript"),
-  {
     rules: {
       "@typescript-eslint/no-explicit-any": "off",
       "react/no-unescaped-entities": "warn",
       "@typescript-eslint/no-require-imports": "off",
+      "prefer-const": "warn",
     },
   },
 ];
