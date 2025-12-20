@@ -152,7 +152,7 @@ export function CategoryFormDialog({
               value={form.watch("type")}
               onValueChange={(value) => form.setValue("type", value)}
             >
-              <SelectTrigger>
+              <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select type" />
               </SelectTrigger>
               <SelectContent>
@@ -169,6 +169,7 @@ export function CategoryFormDialog({
               id="name"
               {...form.register("name", { required: true })}
               placeholder="e.g. Office Supplies"
+              className="w-full"
             />
           </div>
 
@@ -218,6 +219,7 @@ export function CategoryFormDialog({
               {...form.register("description")}
               placeholder="Optional description"
               rows={3}
+              className="w-full"
             />
           </div>
 

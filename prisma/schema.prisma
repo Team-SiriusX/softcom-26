@@ -93,7 +93,7 @@ model Business {
   phone           String?
   address         String?
   taxId           String?
-  currency        String   @default("USD")
+  currency        String   @default("PKR")
   fiscalYearStart Int      @default(1) // Month number (1-12)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
@@ -105,6 +105,8 @@ model Business {
   transactions        Transaction[]
   categories          Category[]
   journalEntries      JournalEntry[]
+  clients             Client[]
+  invoices            Invoice[]
 
   @@map("business")
 }
@@ -159,6 +161,77 @@ model Category {
   @@unique([businessId, name])
   @@index([businessId, type])
   @@map("category")
+}
+
+// ============================================
+// CLIENTS & INVOICES
+// ============================================
+
+model Client {
+  id          String    @id @default(cuid())
+  name        String
+  email       String?
+  phone       String?
+  address     String?
+  taxId       String?
+  notes       String?
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  businessId  String
+  business    Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  
+  // Relations
+  invoices    Invoice[]
+
+  @@unique([businessId, email])
+  @@index([businessId, isActive])
+  @@map("client")
+}
+
+model Invoice {
+  id              String         @id @default(cuid())
+  invoiceNumber   String         // e.g., "INV-001"
+  issueDate       DateTime
+  dueDate         DateTime
+  status          InvoiceStatus  @default(DRAFT)
+  subtotal        Decimal        @db.Decimal(15, 2)
+  taxAmount       Decimal        @default(0) @db.Decimal(15, 2)
+  discount        Decimal        @default(0) @db.Decimal(15, 2)
+  total           Decimal        @db.Decimal(15, 2)
+  paidAmount      Decimal        @default(0) @db.Decimal(15, 2)
+  notes           String?
+  terms           String?        // Payment terms
+  attachmentUrl   String?        // URL to uploaded invoice file
+  reminderSent    Boolean        @default(false)
+  reminderDate    DateTime?      // When to send reminder
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  businessId      String
+  business        Business       @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  clientId        String
+  client          Client         @relation(fields: [clientId], references: [id])
+  
+  // Relations
+  items           InvoiceItem[]
+
+  @@unique([businessId, invoiceNumber])
+  @@index([businessId, status])
+  @@index([businessId, dueDate])
+  @@index([clientId])
+  @@map("invoice")
+}
+
+model InvoiceItem {
+  id          String   @id @default(cuid())
+  description String
+  quantity    Decimal  @db.Decimal(10, 2)
+  unitPrice   Decimal  @db.Decimal(15, 2)
+  amount      Decimal  @db.Decimal(15, 2)
+  invoiceId   String
+  invoice     Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@map("invoice_item")
 }
 
 // ============================================
@@ -349,5 +422,15 @@ enum InsightType {
   OPPORTUNITY
   RISK
   RECOMMENDATION
+}
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  VIEWED
+  PARTIAL
+  PAID
+  OVERDUE
+  CANCELLED
 }
 

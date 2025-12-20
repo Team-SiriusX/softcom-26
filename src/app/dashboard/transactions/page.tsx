@@ -383,7 +383,7 @@ export default function TransactionsPage() {
                             : "text-red-500"
                         )}
                       >
-                        {transaction.type === "INCOME" ? "+" : "-"}$
+                        {transaction.type === "INCOME" ? "+" : "-"}RS
                         {transaction.amount.toLocaleString()}
                       </TableCell>
                       <TableCell className="text-center">

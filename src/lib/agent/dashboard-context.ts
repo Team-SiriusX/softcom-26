@@ -143,7 +143,7 @@ function docTextFromSnapshot(snapshot: DashboardSnapshot): string {
   
   const topCats = snapshot.expenseByCategory90d
     .slice(0, 6)
-    .map((c) => `${c.categoryName}: $${c.total.toFixed(2)}`)
+    .map((c) => `${c.categoryName}: Rs ${c.total.toFixed(2)}`)
     .join("; ");
 
   const sections = [
