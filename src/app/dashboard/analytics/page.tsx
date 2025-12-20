@@ -37,6 +37,7 @@ import {
   Layers,
   Activity,
   Landmark,
+  Sparkles,
 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -334,8 +335,9 @@ export default function AnalyticsPage() {
     }
 
     const top = (expensePieData || []).slice(0, 1)[0];
-    if (top && expenseBreakdown?.total > 0) {
-      const share = (top.value / expenseBreakdown.total) * 100;
+    const totalExpense = expenseBreakdown?.total ?? 0;
+    if (top && totalExpense > 0) {
+      const share = (top.value / totalExpense) * 100;
       if (share >= 45) {
         items.push({
           tone: "warn",
