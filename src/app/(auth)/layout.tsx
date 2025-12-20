@@ -8,23 +8,22 @@ export default function AuthLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="relative min-h-screen w-full bg-[#0B0E14] text-white antialiased flex flex-col items-center justify-center">
-      {/* Logo/Header - Simplified */}
+    <div className="relative min-h-screen w-full bg-white text-neutral-900 antialiased flex flex-col items-center justify-center overflow-hidden">
+      {/* Background Elements */}
+      <div className="absolute left-0 top-0 -z-10 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#22D3EE]/10 blur-[120px]" />
+      <div className="absolute right-0 bottom-0 -z-10 h-[500px] w-[500px] translate-x-1/2 translate-y-1/2 rounded-full bg-[#22D3EE]/10 blur-[120px]" />
+
+      {/* Logo/Header */}
       <div className="absolute left-8 top-8 z-50">
         <Link href="/" className="flex items-center gap-2">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#22D3EE]">
-              <span className="text-xl font-bold text-[#0B0E14]">U</span>
-            </div>
-            <div className="flex flex-col">
-              <h1 className="text-xl font-bold text-white">
-                Uni Connect
-              </h1>
-            </div>
+            <h3 className="text-xl font-bold tracking-tight text-neutral-900">
+              FUTURE <span className="text-[#22D3EE]">FINANCE</span>
+            </h3>
         </Link>
       </div>
 
       {/* Content */}
-      <div className="w-full max-w-md p-4">
+      <div className="w-full max-w-md p-8 relative z-10">
         {children}
       </div>
     </div>

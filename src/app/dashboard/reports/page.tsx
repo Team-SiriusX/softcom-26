@@ -15,6 +15,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle, Download, Calendar } from "lucide-react";
@@ -69,21 +70,62 @@ export default function ReportsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Financial Reports</h1>
-          <p className="text-muted-foreground">
+          <p className="text-muted-foreground mt-1">
             Balance sheet, P&L, and cash flow statements
           </p>
         </div>
-        <Button variant="outline">
+        <Button className="h-10 rounded-full bg-[#22D3EE] text-black hover:bg-[#22D3EE]/90">
           <Download className="mr-2 h-4 w-4" />
           Export PDF
         </Button>
       </div>
 
+      <Card className="bg-card border border-border/60 shadow-sm">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base tracking-tight flex items-center gap-2">
+            <Calendar className="h-4 w-4 text-muted-foreground" />
+            Date controls
+          </CardTitle>
+          <CardDescription>Adjust the report dates without changing any data logic.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="space-y-1">
+              <div className="text-sm font-medium">Balance sheet date</div>
+              <Input
+                type="date"
+                value={balanceSheetDate}
+                onChange={(e) => setBalanceSheetDate(e.target.value)}
+                className="h-10 rounded-full bg-background"
+              />
+            </div>
+            <div className="space-y-1">
+              <div className="text-sm font-medium">Start date</div>
+              <Input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="h-10 rounded-full bg-background"
+              />
+            </div>
+            <div className="space-y-1">
+              <div className="text-sm font-medium">End date</div>
+              <Input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="h-10 rounded-full bg-background"
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       <Tabs defaultValue="balance-sheet" className="space-y-4">
-        <TabsList>
+        <TabsList className="rounded-full bg-card border border-border/60 p-1 w-fit">
           <TabsTrigger value="balance-sheet">Balance Sheet</TabsTrigger>
           <TabsTrigger value="profit-loss">Profit & Loss</TabsTrigger>
           <TabsTrigger value="cash-flow">Cash Flow</TabsTrigger>
@@ -91,7 +133,7 @@ export default function ReportsPage() {
 
         {/* Balance Sheet */}
         <TabsContent value="balance-sheet" className="space-y-4">
-          <Card>
+          <Card className="bg-card border border-border/60 shadow-sm">
             <CardHeader>
               <CardTitle>Balance Sheet</CardTitle>
               <CardDescription>
@@ -105,202 +147,174 @@ export default function ReportsPage() {
                 </div>
               ) : balanceSheet ? (
                 <div className="space-y-6">
-                  {/* Assets */}
-                  <div>
-                    <h3 className="font-semibold text-lg mb-4">ASSETS</h3>
-                    
-                    <div className="space-y-4">
-                      <div>
-                        <h4 className="font-medium text-sm text-muted-foreground mb-2">
-                          Current Assets
-                        </h4>
-                        <div className="space-y-1 ml-4">
-                          {balanceSheet.assets.currentAssets.accounts.map(
-                            (acc: any) => (
-                              <div
-                                key={acc.id}
-                                className="flex justify-between text-sm"
-                              >
-                                <span>{acc.name}</span>
-                                <span>${acc.balance.toLocaleString()}</span>
-                              </div>
-                            )
-                          )}
-                          <div className="flex justify-between font-medium pt-2 border-t">
-                            <span>Total Current Assets</span>
-                            <span>
-                              $
-                              {balanceSheet.assets.currentAssets.total.toLocaleString()}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div>
-                        <h4 className="font-medium text-sm text-muted-foreground mb-2">
-                          Fixed Assets
-                        </h4>
-                        <div className="space-y-1 ml-4">
-                          {balanceSheet.assets.fixedAssets.accounts.map(
-                            (acc: any) => (
-                              <div
-                                key={acc.id}
-                                className="flex justify-between text-sm"
-                              >
-                                <span>{acc.name}</span>
-                                <span>${acc.balance.toLocaleString()}</span>
-                              </div>
-                            )
-                          )}
-                          <div className="flex justify-between font-medium pt-2 border-t">
-                            <span>Total Fixed Assets</span>
-                            <span>
-                              $
-                              {balanceSheet.assets.fixedAssets.total.toLocaleString()}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex justify-between font-bold text-lg pt-4 border-t-2">
-                        <span>TOTAL ASSETS</span>
-                        <span>
+                  {/* KPI row */}
+                  <div className="grid gap-4 md:grid-cols-4">
+                    <Card className="bg-background border border-border/60 shadow-sm">
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm text-muted-foreground">Total Assets</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-2xl font-bold tracking-tight">
                           ${balanceSheet.assets.total.toLocaleString()}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Liabilities */}
-                  <div className="pt-6 border-t-2">
-                    <h3 className="font-semibold text-lg mb-4">
-                      LIABILITIES & EQUITY
-                    </h3>
-
-                    <div className="space-y-4">
-                      <div>
-                        <h4 className="font-medium text-sm text-muted-foreground mb-2">
-                          Current Liabilities
-                        </h4>
-                        <div className="space-y-1 ml-4">
-                          {balanceSheet.liabilities.currentLiabilities.accounts.map(
-                            (acc: any) => (
-                              <div
-                                key={acc.id}
-                                className="flex justify-between text-sm"
-                              >
-                                <span>{acc.name}</span>
-                                <span>${acc.balance.toLocaleString()}</span>
-                              </div>
-                            )
-                          )}
-                          <div className="flex justify-between font-medium pt-2 border-t">
-                            <span>Total Current Liabilities</span>
-                            <span>
-                              $
-                              {balanceSheet.liabilities.currentLiabilities.total.toLocaleString()}
-                            </span>
-                          </div>
                         </div>
-                      </div>
-
-                      <div className="flex justify-between font-medium text-base pt-2 border-t">
-                        <span>TOTAL LIABILITIES</span>
-                        <span>
+                      </CardContent>
+                    </Card>
+                    <Card className="bg-background border border-border/60 shadow-sm">
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm text-muted-foreground">Total Liabilities</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-2xl font-bold tracking-tight">
                           ${balanceSheet.liabilities.total.toLocaleString()}
-                        </span>
-                      </div>
-
-                      <div className="pt-4">
-                        <h4 className="font-medium text-sm text-muted-foreground mb-2">
-                          Equity
-                        </h4>
-                        <div className="space-y-1 ml-4">
-                          {balanceSheet.equity.ownersEquity.accounts.map(
-                            (acc: any) => (
-                              <div
-                                key={acc.id}
-                                className="flex justify-between text-sm"
-                              >
-                                <span>{acc.name}</span>
-                                <span>${acc.balance.toLocaleString()}</span>
-                              </div>
-                            )
-                          )}
-                          {balanceSheet.equity.retainedEarnings.accounts.map(
-                            (acc: any) => (
-                              <div
-                                key={acc.id}
-                                className="flex justify-between text-sm"
-                              >
-                                <span>{acc.name}</span>
-                                <span>${acc.balance.toLocaleString()}</span>
-                              </div>
-                            )
-                          )}
-                          <div className="flex justify-between font-medium pt-2 border-t">
-                            <span>TOTAL EQUITY</span>
-                            <span>
-                              ${balanceSheet.equity.total.toLocaleString()}
-                            </span>
-                          </div>
                         </div>
-                      </div>
-
-                      <div className="flex justify-between font-bold text-lg pt-4 border-t-2">
-                        <span>TOTAL LIABILITIES & EQUITY</span>
-                        <span>
-                          $
-                          {balanceSheet.totals.liabilitiesAndEquity.toLocaleString()}
-                        </span>
-                      </div>
-                    </div>
+                      </CardContent>
+                    </Card>
+                    <Card className="bg-background border border-border/60 shadow-sm">
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm text-muted-foreground">Total Equity</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-2xl font-bold tracking-tight">
+                          ${balanceSheet.equity.total.toLocaleString()}
+                        </div>
+                      </CardContent>
+                    </Card>
+                    <Card className={balanceSheet.totals.isBalanced ? "bg-green-50 dark:bg-green-900/10 border border-green-200/60" : "bg-red-50 dark:bg-red-900/10 border border-red-200/60"}>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm text-muted-foreground">Status</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className={balanceSheet.totals.isBalanced ? "text-green-700 dark:text-green-300 font-semibold" : "text-red-700 dark:text-red-300 font-semibold"}>
+                          {balanceSheet.totals.isBalanced ? "✓ Balanced" : "✗ Not Balanced"}
+                        </div>
+                        <div className="text-xs text-muted-foreground mt-1">Assets vs Liabilities + Equity</div>
+                      </CardContent>
+                    </Card>
                   </div>
 
-                  {/* Balance Check */}
-                  <Card className={balanceSheet.totals.isBalanced ? "bg-green-50 dark:bg-green-900/10" : "bg-red-50 dark:bg-red-900/10"}>
-                    <CardContent className="pt-6">
-                      <div className="flex items-center justify-between">
-                        <span className="font-medium">Balance Check:</span>
-                        <span className={balanceSheet.totals.isBalanced ? "text-green-600" : "text-red-600"}>
-                          {balanceSheet.totals.isBalanced
-                            ? "✓ Balanced"
-                            : "✗ Not Balanced"}
-                        </span>
-                      </div>
-                    </CardContent>
-                  </Card>
+                  {/* Two-column breakdown */}
+                  <div className="grid gap-6 lg:grid-cols-2">
+                    <Card className="bg-background border border-border/60 shadow-sm">
+                      <CardHeader>
+                        <CardTitle className="tracking-tight">Assets</CardTitle>
+                        <CardDescription>What the business owns</CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-6">
+                        <div>
+                          <div className="flex items-center justify-between">
+                            <h4 className="text-sm font-semibold">Current assets</h4>
+                            <span className="text-sm font-semibold">${balanceSheet.assets.currentAssets.total.toLocaleString()}</span>
+                          </div>
+                          <div className="mt-3 space-y-2">
+                            {balanceSheet.assets.currentAssets.accounts.map((acc: any) => (
+                              <div key={acc.id} className="flex items-center justify-between text-sm">
+                                <span className="text-muted-foreground">{acc.name}</span>
+                                <span className="font-medium">${acc.balance.toLocaleString()}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="border-t border-border/60 pt-4">
+                          <div className="flex items-center justify-between">
+                            <h4 className="text-sm font-semibold">Fixed assets</h4>
+                            <span className="text-sm font-semibold">${balanceSheet.assets.fixedAssets.total.toLocaleString()}</span>
+                          </div>
+                          <div className="mt-3 space-y-2">
+                            {balanceSheet.assets.fixedAssets.accounts.map((acc: any) => (
+                              <div key={acc.id} className="flex items-center justify-between text-sm">
+                                <span className="text-muted-foreground">{acc.name}</span>
+                                <span className="font-medium">${acc.balance.toLocaleString()}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="border-t-2 border-border/60 pt-4 flex items-center justify-between">
+                          <span className="text-sm font-semibold">Total assets</span>
+                          <span className="text-base font-bold">${balanceSheet.assets.total.toLocaleString()}</span>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="bg-background border border-border/60 shadow-sm">
+                      <CardHeader>
+                        <CardTitle className="tracking-tight">Liabilities & Equity</CardTitle>
+                        <CardDescription>What the business owes and retains</CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-6">
+                        <div>
+                          <div className="flex items-center justify-between">
+                            <h4 className="text-sm font-semibold">Current liabilities</h4>
+                            <span className="text-sm font-semibold">${balanceSheet.liabilities.currentLiabilities.total.toLocaleString()}</span>
+                          </div>
+                          <div className="mt-3 space-y-2">
+                            {balanceSheet.liabilities.currentLiabilities.accounts.map((acc: any) => (
+                              <div key={acc.id} className="flex items-center justify-between text-sm">
+                                <span className="text-muted-foreground">{acc.name}</span>
+                                <span className="font-medium">${acc.balance.toLocaleString()}</span>
+                              </div>
+                            ))}
+                          </div>
+                          <div className="mt-3 pt-3 border-t border-border/60 flex items-center justify-between text-sm">
+                            <span className="font-semibold">Total liabilities</span>
+                            <span className="font-semibold">${balanceSheet.liabilities.total.toLocaleString()}</span>
+                          </div>
+                        </div>
+
+                        <div className="border-t border-border/60 pt-4">
+                          <div className="flex items-center justify-between">
+                            <h4 className="text-sm font-semibold">Equity</h4>
+                            <span className="text-sm font-semibold">${balanceSheet.equity.total.toLocaleString()}</span>
+                          </div>
+                          <div className="mt-3 space-y-2">
+                            {balanceSheet.equity.ownersEquity.accounts.map((acc: any) => (
+                              <div key={acc.id} className="flex items-center justify-between text-sm">
+                                <span className="text-muted-foreground">{acc.name}</span>
+                                <span className="font-medium">${acc.balance.toLocaleString()}</span>
+                              </div>
+                            ))}
+                            {balanceSheet.equity.retainedEarnings.accounts.map((acc: any) => (
+                              <div key={acc.id} className="flex items-center justify-between text-sm">
+                                <span className="text-muted-foreground">{acc.name}</span>
+                                <span className="font-medium">${acc.balance.toLocaleString()}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="border-t-2 border-border/60 pt-4 flex items-center justify-between">
+                          <span className="text-sm font-semibold">Total liabilities & equity</span>
+                          <span className="text-base font-bold">${balanceSheet.totals.liabilitiesAndEquity.toLocaleString()}</span>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
 
                   {/* Key Metrics */}
-                  <div className="grid gap-4 md:grid-cols-3 pt-4">
-                    <Card>
+                  <div className="grid gap-4 md:grid-cols-3">
+                    <Card className="bg-background border border-border/60 shadow-sm">
                       <CardHeader className="pb-2">
                         <CardTitle className="text-sm">Working Capital</CardTitle>
                       </CardHeader>
                       <CardContent>
-                        <div className="text-2xl font-bold">
-                          ${balanceSheet.metrics.workingCapital.toLocaleString()}
-                        </div>
+                        <div className="text-2xl font-bold">${balanceSheet.metrics.workingCapital.toLocaleString()}</div>
                       </CardContent>
                     </Card>
-                    <Card>
+                    <Card className="bg-background border border-border/60 shadow-sm">
                       <CardHeader className="pb-2">
                         <CardTitle className="text-sm">Current Ratio</CardTitle>
                       </CardHeader>
                       <CardContent>
-                        <div className="text-2xl font-bold">
-                          {balanceSheet.metrics.currentRatio.toFixed(2)}
-                        </div>
+                        <div className="text-2xl font-bold">{balanceSheet.metrics.currentRatio.toFixed(2)}</div>
                       </CardContent>
                     </Card>
-                    <Card>
+                    <Card className="bg-background border border-border/60 shadow-sm">
                       <CardHeader className="pb-2">
                         <CardTitle className="text-sm">Debt-to-Equity</CardTitle>
                       </CardHeader>
                       <CardContent>
-                        <div className="text-2xl font-bold">
-                          {balanceSheet.metrics.debtToEquityRatio.toFixed(2)}
-                        </div>
+                        <div className="text-2xl font-bold">{balanceSheet.metrics.debtToEquityRatio.toFixed(2)}</div>
                       </CardContent>
                     </Card>
                   </div>
@@ -316,7 +330,7 @@ export default function ReportsPage() {
 
         {/* Profit & Loss */}
         <TabsContent value="profit-loss" className="space-y-4">
-          <Card>
+          <Card className="bg-card border border-border/60 shadow-sm">
             <CardHeader>
               <CardTitle>Profit & Loss Statement</CardTitle>
               <CardDescription>
@@ -331,78 +345,101 @@ export default function ReportsPage() {
                 </div>
               ) : profitLoss ? (
                 <div className="space-y-6">
-                  {/* Revenue */}
-                  <div>
-                    <h3 className="font-semibold text-lg mb-2">REVENUE</h3>
-                    <div className="space-y-1 ml-4">
-                      {profitLoss.revenue.operatingRevenue.accounts.map((acc: any) => (
-                        <div key={acc.id} className="flex justify-between text-sm">
-                          <span>{acc.name}</span>
-                          <span>${acc.balance.toLocaleString()}</span>
+                  {/* KPI row */}
+                  <div className="grid gap-4 md:grid-cols-3">
+                    <Card className="bg-background border border-border/60 shadow-sm">
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm text-muted-foreground">Total Revenue</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-2xl font-bold tracking-tight">${profitLoss.revenue.total.toLocaleString()}</div>
+                      </CardContent>
+                    </Card>
+                    <Card className="bg-background border border-border/60 shadow-sm">
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm text-muted-foreground">Total Expenses</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-2xl font-bold tracking-tight">${profitLoss.expenses.total.toLocaleString()}</div>
+                      </CardContent>
+                    </Card>
+                    <Card className="bg-background border border-border/60 shadow-sm">
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm text-muted-foreground">Net Income</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className={profitLoss.summary.netIncome >= 0 ? "text-2xl font-bold tracking-tight text-green-600" : "text-2xl font-bold tracking-tight text-red-600"}>
+                          ${profitLoss.summary.netIncome.toLocaleString()}
                         </div>
-                      ))}
-                      <div className="flex justify-between font-bold pt-2 border-t">
-                        <span>Total Revenue</span>
-                        <span>${profitLoss.revenue.total.toLocaleString()}</span>
-                      </div>
-                    </div>
+                      </CardContent>
+                    </Card>
                   </div>
 
-                  {/* Expenses */}
-                  <div>
-                    <h3 className="font-semibold text-lg mb-2">EXPENSES</h3>
-                    <div className="space-y-1 ml-4">
-                      {profitLoss.expenses.operatingExpenses.accounts.map((acc: any) => (
-                        <div key={acc.id} className="flex justify-between text-sm">
-                          <span>{acc.name}</span>
-                          <span>${acc.balance.toLocaleString()}</span>
+                  {/* Breakdown */}
+                  <div className="grid gap-6 lg:grid-cols-2">
+                    <Card className="bg-background border border-border/60 shadow-sm">
+                      <CardHeader>
+                        <CardTitle className="tracking-tight">Revenue</CardTitle>
+                        <CardDescription>Income earned during the period</CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-2">
+                        {profitLoss.revenue.operatingRevenue.accounts.map((acc: any) => (
+                          <div key={acc.id} className="flex items-center justify-between text-sm">
+                            <span className="text-muted-foreground">{acc.name}</span>
+                            <span className="font-medium">${acc.balance.toLocaleString()}</span>
+                          </div>
+                        ))}
+                        <div className="pt-3 mt-2 border-t border-border/60 flex items-center justify-between">
+                          <span className="text-sm font-semibold">Total revenue</span>
+                          <span className="text-sm font-semibold">${profitLoss.revenue.total.toLocaleString()}</span>
                         </div>
-                      ))}
-                      <div className="flex justify-between font-bold pt-2 border-t">
-                        <span>Total Expenses</span>
-                        <span>${profitLoss.expenses.total.toLocaleString()}</span>
-                      </div>
-                    </div>
-                  </div>
+                      </CardContent>
+                    </Card>
 
-                  {/* Net Income */}
-                  <div className="flex justify-between font-bold text-xl pt-4 border-t-2">
-                    <span>NET INCOME</span>
-                    <span className={profitLoss.summary.netIncome >= 0 ? "text-green-600" : "text-red-600"}>
-                      ${profitLoss.summary.netIncome.toLocaleString()}
-                    </span>
+                    <Card className="bg-background border border-border/60 shadow-sm">
+                      <CardHeader>
+                        <CardTitle className="tracking-tight">Expenses</CardTitle>
+                        <CardDescription>Costs incurred during the period</CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-2">
+                        {profitLoss.expenses.operatingExpenses.accounts.map((acc: any) => (
+                          <div key={acc.id} className="flex items-center justify-between text-sm">
+                            <span className="text-muted-foreground">{acc.name}</span>
+                            <span className="font-medium">${acc.balance.toLocaleString()}</span>
+                          </div>
+                        ))}
+                        <div className="pt-3 mt-2 border-t border-border/60 flex items-center justify-between">
+                          <span className="text-sm font-semibold">Total expenses</span>
+                          <span className="text-sm font-semibold">${profitLoss.expenses.total.toLocaleString()}</span>
+                        </div>
+                      </CardContent>
+                    </Card>
                   </div>
 
                   {/* Margins */}
                   <div className="grid gap-4 md:grid-cols-3">
-                    <Card>
+                    <Card className="bg-background border border-border/60 shadow-sm">
                       <CardHeader className="pb-2">
                         <CardTitle className="text-sm">Gross Profit Margin</CardTitle>
                       </CardHeader>
                       <CardContent>
-                        <div className="text-2xl font-bold">
-                          {profitLoss.summary.grossProfitMargin.toFixed(1)}%
-                        </div>
+                        <div className="text-2xl font-bold">{profitLoss.summary.grossProfitMargin.toFixed(1)}%</div>
                       </CardContent>
                     </Card>
-                    <Card>
+                    <Card className="bg-background border border-border/60 shadow-sm">
                       <CardHeader className="pb-2">
                         <CardTitle className="text-sm">Operating Margin</CardTitle>
                       </CardHeader>
                       <CardContent>
-                        <div className="text-2xl font-bold">
-                          {profitLoss.summary.operatingMargin.toFixed(1)}%
-                        </div>
+                        <div className="text-2xl font-bold">{profitLoss.summary.operatingMargin.toFixed(1)}%</div>
                       </CardContent>
                     </Card>
-                    <Card>
+                    <Card className="bg-background border border-border/60 shadow-sm">
                       <CardHeader className="pb-2">
                         <CardTitle className="text-sm">Net Profit Margin</CardTitle>
                       </CardHeader>
                       <CardContent>
-                        <div className="text-2xl font-bold">
-                          {profitLoss.summary.netProfitMargin.toFixed(1)}%
-                        </div>
+                        <div className="text-2xl font-bold">{profitLoss.summary.netProfitMargin.toFixed(1)}%</div>
                       </CardContent>
                     </Card>
                   </div>
@@ -418,7 +455,7 @@ export default function ReportsPage() {
 
         {/* Cash Flow */}
         <TabsContent value="cash-flow" className="space-y-4">
-          <Card>
+          <Card className="bg-card border border-border/60 shadow-sm">
             <CardHeader>
               <CardTitle>Cash Flow Statement</CardTitle>
               <CardDescription>
@@ -433,39 +470,53 @@ export default function ReportsPage() {
                 </div>
               ) : cashFlow ? (
                 <div className="space-y-6">
-                  <div className="space-y-4">
-                    {["operating", "investing", "financing"].map((category) => (
-                      <div key={category}>
-                        <h3 className="font-semibold text-base mb-2 capitalize">
-                          {category} Activities
-                        </h3>
-                        <div className="ml-4 text-sm">
-                          <div className="flex justify-between font-medium">
-                            <span>Net Cash Flow</span>
-                            <span className={(cashFlow as any)[category].total >= 0 ? "text-green-600" : "text-red-600"}>
-                              ${(cashFlow as any)[category].total.toLocaleString()}
-                            </span>
-                          </div>
+                  <div className="grid gap-4 md:grid-cols-3">
+                    <Card className="bg-background border border-border/60 shadow-sm">
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm text-muted-foreground">Opening Balance</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-2xl font-bold tracking-tight">${cashFlow.summary.openingBalance.toLocaleString()}</div>
+                      </CardContent>
+                    </Card>
+                    <Card className="bg-background border border-border/60 shadow-sm">
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm text-muted-foreground">Net Cash Flow</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className={cashFlow.summary.netCashFlow >= 0 ? "text-2xl font-bold tracking-tight text-green-600" : "text-2xl font-bold tracking-tight text-red-600"}>
+                          ${cashFlow.summary.netCashFlow.toLocaleString()}
                         </div>
-                      </div>
-                    ))}
+                      </CardContent>
+                    </Card>
+                    <Card className="bg-background border border-border/60 shadow-sm">
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm text-muted-foreground">Closing Balance</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-2xl font-bold tracking-tight">${cashFlow.summary.closingBalance.toLocaleString()}</div>
+                      </CardContent>
+                    </Card>
                   </div>
 
-                  <div className="pt-4 border-t-2 space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span>Opening Balance</span>
-                      <span>${cashFlow.summary.openingBalance.toLocaleString()}</span>
-                    </div>
-                    <div className="flex justify-between font-bold text-lg">
-                      <span>Net Cash Flow</span>
-                      <span className={cashFlow.summary.netCashFlow >= 0 ? "text-green-600" : "text-red-600"}>
-                        ${cashFlow.summary.netCashFlow.toLocaleString()}
-                      </span>
-                    </div>
-                    <div className="flex justify-between font-bold text-xl pt-2 border-t">
-                      <span>Closing Balance</span>
-                      <span>${cashFlow.summary.closingBalance.toLocaleString()}</span>
-                    </div>
+                  <div className="grid gap-4 lg:grid-cols-3">
+                    {["operating", "investing", "financing"].map((category) => {
+                      const cfByCategory = cashFlow as unknown as Record<string, { total: number }>;
+                      const total = cfByCategory[category]?.total ?? 0;
+                      return (
+                        <Card key={category} className="bg-background border border-border/60 shadow-sm">
+                          <CardHeader className="pb-2">
+                            <CardTitle className="text-sm tracking-tight capitalize">{category} activities</CardTitle>
+                            <CardDescription>Net cash flow</CardDescription>
+                          </CardHeader>
+                          <CardContent>
+                            <div className={total >= 0 ? "text-2xl font-bold text-green-600" : "text-2xl font-bold text-red-600"}>
+                              ${total.toLocaleString()}
+                            </div>
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
                   </div>
                 </div>
               ) : (

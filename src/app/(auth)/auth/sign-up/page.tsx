@@ -91,10 +91,10 @@ export default function SignUp() {
   return (
     <div className="space-y-6">
       <div className="space-y-2 text-center">
-        <h1 className="text-3xl font-bold text-white">
+        <h1 className="text-3xl font-bold text-neutral-900">
           Create Account
         </h1>
-        <p className="text-neutral-400">
+        <p className="text-neutral-500">
           Join the campus job marketplace today
         </p>
       </div>
@@ -102,7 +102,7 @@ export default function SignUp() {
       <form onSubmit={handleEmailSignUp} className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="first-name" className="text-neutral-300">
+            <Label htmlFor="first-name" className="text-neutral-700">
               First name
             </Label>
             <Input
@@ -112,11 +112,11 @@ export default function SignUp() {
               onChange={(e) => setFirstName(e.target.value)}
               value={firstName}
               disabled={loading}
-              className="border-neutral-800 bg-[#0B0E14] text-white placeholder:text-neutral-600 focus:border-[#22D3EE] focus:ring-[#22D3EE]/20"
+              className="border-neutral-200 bg-white text-neutral-900 placeholder:text-neutral-400 focus:border-[#22D3EE] focus:ring-[#22D3EE]/20"
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="last-name" className="text-neutral-300">
+            <Label htmlFor="last-name" className="text-neutral-700">
               Last name
             </Label>
             <Input
@@ -126,13 +126,13 @@ export default function SignUp() {
               onChange={(e) => setLastName(e.target.value)}
               value={lastName}
               disabled={loading}
-              className="border-neutral-800 bg-[#0B0E14] text-white placeholder:text-neutral-600 focus:border-[#22D3EE] focus:ring-[#22D3EE]/20"
+              className="border-neutral-200 bg-white text-neutral-900 placeholder:text-neutral-400 focus:border-[#22D3EE] focus:ring-[#22D3EE]/20"
             />
           </div>
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="email" className="text-neutral-300">
+          <Label htmlFor="email" className="text-neutral-700">
             Email
           </Label>
           <Input
@@ -143,12 +143,12 @@ export default function SignUp() {
             onChange={(e) => setEmail(e.target.value)}
             value={email}
             disabled={loading}
-            className="border-neutral-800 bg-[#0B0E14] text-white placeholder:text-neutral-600 focus:border-[#22D3EE] focus:ring-[#22D3EE]/20"
+            className="border-neutral-200 bg-white text-neutral-900 placeholder:text-neutral-400 focus:border-[#22D3EE] focus:ring-[#22D3EE]/20"
           />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="password" className="text-neutral-300">
+          <Label htmlFor="password" className="text-neutral-700">
             Password
           </Label>
           <Input
@@ -160,12 +160,12 @@ export default function SignUp() {
             placeholder="••••••••"
             disabled={loading}
             required
-            className="border-neutral-800 bg-[#0B0E14] text-white placeholder:text-neutral-600 focus:border-[#22D3EE] focus:ring-[#22D3EE]/20"
+            className="border-neutral-200 bg-white text-neutral-900 placeholder:text-neutral-400 focus:border-[#22D3EE] focus:ring-[#22D3EE]/20"
           />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="password_confirmation" className="text-neutral-300">
+          <Label htmlFor="password_confirmation" className="text-neutral-700">
             Confirm Password
           </Label>
           <Input
@@ -177,13 +177,13 @@ export default function SignUp() {
             placeholder="••••••••"
             disabled={loading}
             required
-            className="border-neutral-800 bg-[#0B0E14] text-white placeholder:text-neutral-600 focus:border-[#22D3EE] focus:ring-[#22D3EE]/20"
+            className="border-neutral-200 bg-white text-neutral-900 placeholder:text-neutral-400 focus:border-[#22D3EE] focus:ring-[#22D3EE]/20"
           />
         </div>
 
         <Button
           type="submit"
-          className="w-full bg-[#22D3EE] text-[#0B0E14] hover:bg-[#22D3EE]/90 font-semibold"
+          className="w-full bg-[#22D3EE] text-white hover:bg-[#22D3EE]/90 font-semibold shadow-lg shadow-[#22D3EE]/20"
           disabled={loading}
         >
           {loading ? (
@@ -195,10 +195,10 @@ export default function SignUp() {
 
         <div className="relative">
           <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t border-neutral-800" />
+            <span className="w-full border-t border-neutral-200" />
           </div>
           <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-[#0B0E14] px-2 text-neutral-500">
+            <span className="bg-white px-2 text-neutral-500">
               Or continue with
             </span>
           </div>
@@ -209,7 +209,7 @@ export default function SignUp() {
         <Button
           variant="outline"
           disabled={loading}
-          className="border-neutral-800 bg-[#0B0E14] text-white hover:bg-neutral-900 hover:text-white"
+          className="border-neutral-200 bg-white text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900"
           onClick={() => handleSocialSignIn("google")}
         >
           {loading ? (
@@ -227,7 +227,7 @@ export default function SignUp() {
         <Button
           variant="outline"
           disabled={loading}
-          className="border-neutral-800 bg-[#0B0E14] text-white hover:bg-neutral-900 hover:text-white"
+          className="border-neutral-200 bg-white text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900"
           onClick={() => handleSocialSignIn("github")}
         >
           {loading ? (
@@ -248,7 +248,7 @@ export default function SignUp() {
         </Button>
       </div>
 
-      <div className="text-center text-sm text-neutral-400">
+      <div className="text-center text-sm text-neutral-500">
         Already have an account?{" "}
         <Link
           href="/auth/sign-in"
