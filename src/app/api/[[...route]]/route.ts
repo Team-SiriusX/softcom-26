@@ -12,6 +12,7 @@ import {
   analytics,
   stripe,
   agent,
+  simulator,
 } from "./controllers/(base)";
 
 const app = new Hono().basePath("/api");
@@ -36,7 +37,8 @@ const routes = app
   .route("/reports", reports)
   .route("/analytics", analytics)
   .route("/stripe", stripe)
-  .route("/agent", agent);
+  .route("/agent", agent)
+  .route("/simulator", simulator);
 
 export const GET = handle(app);
 export const POST = handle(app);
