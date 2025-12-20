@@ -21,6 +21,9 @@ export function BusinessProvider({ children }: { children: React.ReactNode }) {
     const saved = localStorage.getItem("selectedBusinessId");
     if (saved) {
       setSelectedBusinessId(saved);
+    } else {
+      // Initialize localStorage with null if it doesn't exist
+      localStorage.setItem("selectedBusinessId", "null");
     }
   }, []);
 
@@ -30,7 +33,7 @@ export function BusinessProvider({ children }: { children: React.ReactNode }) {
     if (id) {
       localStorage.setItem("selectedBusinessId", id);
     } else {
-      localStorage.removeItem("selectedBusinessId");
+      localStorage.setItem("selectedBusinessId", "null");
     }
   };
 

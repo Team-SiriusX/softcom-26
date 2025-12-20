@@ -29,6 +29,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { toast } from "sonner";
 
 const businessSchema = z.object({
   name: z.string().min(1, "Business name is required"),
@@ -117,15 +118,23 @@ export function BusinessFormDialog({
     if (isEditing) {
       updateMutation.mutate(data, {
         onSuccess: () => {
+          toast.success("Business updated successfully");
           onOpenChange(false);
           form.reset();
+        },
+        onError: (error) => {
+          toast.error(error.message);
         },
       });
     } else {
       createMutation.mutate(data, {
         onSuccess: () => {
+          toast.success("Business created successfully");
           onOpenChange(false);
           form.reset();
+        },
+        onError: (error) => {
+          toast.error(error.message);
         },
       });
     }

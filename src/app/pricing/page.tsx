@@ -1,7 +1,16 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { Check, X, Sparkles, Zap, Building2, ArrowRight, Home, LayoutDashboard } from "lucide-react";
+import {
+  Check,
+  X,
+  Sparkles,
+  Zap,
+  Building2,
+  ArrowRight,
+  Home,
+  LayoutDashboard,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useSession } from "@/lib/auth-client";
@@ -31,7 +40,8 @@ const pricingTiers = [
       { text: "Basic Balance Sheet view", included: true },
       { text: "1 business account only", included: true },
       { text: "Export data to CSV", included: true },
-      { text: "Email support (48-hour response)", included: true },
+      { text: "Limited Email support", included: true },
+      { text: "Import data from CSV", included: false },
       { text: "AI features", included: false },
       { text: "Strategic CFO Agent", included: false },
       { text: "Tactical Advisor Agent", included: false },
@@ -65,6 +75,7 @@ const pricingTiers = [
         included: true,
         highlight: true,
       },
+      { text: "Import data from CSV", included: true },
       { text: "7-day cash flow predictions", included: true },
       { text: "30 AI queries per month", included: true },
       { text: "Automated alerts & warnings", included: true },
@@ -123,40 +134,46 @@ export default function PricingPage() {
 
   useGSAP(
     () => {
+      // Set initial positions for animation
+      gsap.set(".pricing-header", { y: 60 });
+      gsap.set(".pricing-toggle", { y: 30 });
+      gsap.set(".pricing-card", { y: 80 });
+      gsap.set(".pricing-footer", { y: 30 });
+
       const tl = gsap.timeline();
 
-      tl.from(".pricing-header", {
-        y: 60,
-        opacity: 0,
+      tl.to(".pricing-header", {
+        y: 0,
+        opacity: 1,
         duration: 1,
         ease: "power3.out",
       })
-        .from(
+        .to(
           ".pricing-toggle",
           {
-            y: 30,
-            opacity: 0,
+            y: 0,
+            opacity: 1,
             duration: 0.8,
             ease: "power2.out",
           },
           "-=0.6"
         )
-        .from(
+        .to(
           ".pricing-card",
           {
-            y: 80,
-            opacity: 0,
+            y: 0,
+            opacity: 1,
             duration: 0.8,
             stagger: 0.15,
             ease: "power3.out",
           },
           "-=0.4"
         )
-        .from(
+        .to(
           ".pricing-footer",
           {
-            y: 30,
-            opacity: 0,
+            y: 0,
+            opacity: 1,
             duration: 0.6,
             ease: "power2.out",
           },
@@ -189,20 +206,20 @@ export default function PricingPage() {
     setLoading(tier);
 
     try {
-      const response = await client.api.stripe["create-checkout-session"]["$post"](
-        {
-          json: {
-            priceId,
-            mode: "subscription",
-            successUrl: `${window.location.origin}/dashboard?subscription=success`,
-            cancelUrl: `${window.location.origin}/pricing?subscription=canceled`,
-            metadata: {
-              userId: session.user.id,
-              tier,
-            },
+      const response = await client.api.stripe["create-checkout-session"][
+        "$post"
+      ]({
+        json: {
+          priceId,
+          mode: "subscription",
+          successUrl: `${window.location.origin}/dashboard?subscription=success`,
+          cancelUrl: `${window.location.origin}/pricing?subscription=canceled`,
+          metadata: {
+            userId: session.user.id,
+            tier,
           },
-        }
-      );
+        },
+      });
 
       if (!response.ok) {
         throw new Error("Failed to create checkout session");
@@ -301,9 +318,10 @@ export default function PricingPage() {
         <div className="absolute right-0 top-1/3 h-[400px] w-[400px] rounded-full bg-neutral-100 blur-[80px]" />
       </div>
 
-      <div className="relative z-10 mx-auto max-w-7xl px-6 py-20 pt-32 lg:px-8">{/* pt-32 for header spacing */}
+      <div className="relative z-10 mx-auto max-w-7xl px-6 py-20 pt-32 lg:px-8">
+        {/* pt-32 for header spacing */}
         {/* Header */}
-        <div className="pricing-header mx-auto max-w-3xl text-center">
+        <div className="pricing-header mx-auto max-w-3xl text-center opacity-0">
           <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-neutral-200 bg-white px-4 py-1.5 shadow-sm">
             <Sparkles className="h-4 w-4 text-[#22D3EE]" />
             <span className="text-sm font-medium text-neutral-600">
@@ -325,7 +343,7 @@ export default function PricingPage() {
         </div>
 
         {/* Billing Toggle */}
-        <div className="pricing-toggle mt-12 flex justify-center">
+        <div className="pricing-toggle mt-12 flex justify-center opacity-0">
           <div className="relative inline-flex items-center gap-1 rounded-full bg-neutral-100 p-1.5">
             <button
               onClick={() => setBillingCycle("monthly")}
@@ -350,9 +368,7 @@ export default function PricingPage() {
             {/* Sliding background */}
             <div
               className={`absolute top-1.5 h-[calc(100%-12px)] w-[calc(50%-6px)] rounded-full bg-white shadow-md transition-all duration-300 ease-out ${
-                billingCycle === "annual"
-                  ? "left-[calc(50%+3px)]"
-                  : "left-1.5"
+                billingCycle === "annual" ? "left-[calc(50%+3px)]" : "left-1.5"
               }`}
             />
           </div>
@@ -374,7 +390,7 @@ export default function PricingPage() {
             return (
               <div
                 key={tier.name}
-                className={`pricing-card group relative overflow-hidden rounded-[2rem] transition-all duration-500 ${
+                className={`pricing-card group relative overflow-hidden rounded-[2rem] opacity-0 transition-all duration-500 ${
                   isPopular
                     ? "bg-neutral-950 text-white lg:-mt-4 lg:mb-4"
                     : "border border-neutral-200 bg-white hover:border-[#22D3EE]/50 hover:shadow-xl hover:shadow-[#22D3EE]/5"
@@ -468,9 +484,7 @@ export default function PricingPage() {
                         ? "bg-[#22D3EE] text-white hover:bg-[#06B6D4] hover:shadow-lg hover:shadow-[#22D3EE]/30"
                         : "bg-neutral-950 text-white hover:bg-neutral-800"
                     }`}
-                    onClick={() =>
-                      handleSubscribe(tier.tier, getPriceId(tier))
-                    }
+                    onClick={() => handleSubscribe(tier.tier, getPriceId(tier))}
                     disabled={loading === tier.tier}
                   >
                     {loading === tier.tier ? (
@@ -525,16 +539,12 @@ export default function PricingPage() {
                         {feature.included ? (
                           <div
                             className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${
-                              isPopular
-                                ? "bg-[#22D3EE]/20"
-                                : "bg-[#22D3EE]/10"
+                              isPopular ? "bg-[#22D3EE]/20" : "bg-[#22D3EE]/10"
                             }`}
                           >
                             <Check
                               className={`h-3 w-3 ${
-                                isPopular
-                                  ? "text-[#22D3EE]"
-                                  : "text-[#22D3EE]"
+                                isPopular ? "text-[#22D3EE]" : "text-[#22D3EE]"
                               }`}
                             />
                           </div>
@@ -578,7 +588,7 @@ export default function PricingPage() {
         </div>
 
         {/* Footer */}
-        <div className="pricing-footer mt-20 text-center">
+        <div className="pricing-footer mt-20 text-center opacity-0">
           <div className="mx-auto max-w-2xl rounded-2xl border border-neutral-200 bg-neutral-50 p-8">
             <div className="flex items-center justify-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#22D3EE]/10">

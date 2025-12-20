@@ -3,6 +3,7 @@ import { zValidator } from "@hono/zod-validator";
 import * as z from "zod";
 import { db } from "@/lib/db";
 import { currentUser } from "@/lib/current-user";
+import { TIER_LIMITS } from "@/lib/subscription-utils";
 
 const app = new Hono()
   // Get all businesses for current user
@@ -68,6 +69,33 @@ const app = new Hono()
       const user = await currentUser();
       if (!user) {
         return c.json({ error: "Unauthorized" }, 401);
+      }
+
+      // Get user's subscription tier and count existing businesses
+      const dbUser = await db.user.findUnique({
+        where: { id: user.id },
+        select: { subscriptionTier: true },
+      });
+
+      const tier = dbUser?.subscriptionTier || "FREE";
+      const tierLimits = TIER_LIMITS[tier];
+      
+      // Count existing businesses
+      const businessCount = await db.business.count({
+        where: { userId: user.id },
+      });
+
+      // Check if user has reached their business limit
+      if (tierLimits.businessAccountsLimit !== -1 && businessCount >= tierLimits.businessAccountsLimit) {
+        const upgradeMessage = tier === "FREE" 
+          ? "Upgrade to Pro for up to 3 business accounts, or Business for unlimited."
+          : tier === "PRO"
+          ? "Upgrade to Business for unlimited business accounts."
+          : "";
+        
+        return c.json({ 
+          error: `You have reached your limit of ${tierLimits.businessAccountsLimit} business account${tierLimits.businessAccountsLimit === 1 ? '' : 's'}. ${upgradeMessage}` 
+        }, 403);
       }
 
       const business = await db.business.create({

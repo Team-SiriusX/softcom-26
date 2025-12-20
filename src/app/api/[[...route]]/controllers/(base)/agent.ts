@@ -10,6 +10,7 @@ import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
 import { currentUser } from "@/lib/current-user";
 import { db } from "@/lib/db";
+import { TIER_LIMITS } from "@/lib/subscription-utils";
 
 // Request validation schemas
 const voiceQuerySchema = z.object({
@@ -91,9 +92,63 @@ const app = new Hono()
     const { query, sessionId, businessId } = c.req.valid("json");
     console.log("[Agent API] Request:", { query: query.slice(0, 50), businessId, sessionId });
 
+    // Check subscription limits
+    const subscription = await db.subscription.findUnique({
+      where: { userId: user.id },
+    });
+
+    // Get tier limits (default to FREE if no subscription)
+    const tier = subscription?.tier || "FREE";
+    const tierLimits = TIER_LIMITS[tier];
+    const aiQueriesUsed = subscription?.aiQueriesUsed || 0;
+    const aiQueriesLimit = subscription?.aiQueriesLimit ?? tierLimits.aiQueriesLimit;
+
+    // Check if user has reached their limit
+    if (aiQueriesLimit !== -1 && aiQueriesUsed >= aiQueriesLimit) {
+      console.log("[Agent API] AI query limit reached:", { aiQueriesUsed, aiQueriesLimit, tier });
+      return c.json(
+        {
+          success: false,
+          error: "AI query limit reached",
+          limitReached: true,
+          aiQueriesUsed,
+          aiQueriesLimit,
+          tier,
+        },
+        403
+      );
+    }
+
+    // FREE tier users cannot use AI
+    if (tier === "FREE") {
+      console.log("[Agent API] FREE tier user attempted to use AI");
+      return c.json(
+        {
+          success: false,
+          error: "AI assistant is not available on the Free plan. Please upgrade to Pro or Business.",
+          upgradeRequired: true,
+          tier,
+        },
+        403
+      );
+    }
+
     try {
       // Dynamic import to avoid errors when not configured
       const { processAgentQuery, generateSessionId } = await import("@/lib/agent");
+      
+      // Trigger background indexing if this is a new session (first query)
+      // This ensures vector data is fresh without blocking the response
+      if (!sessionId && isVectorConfigured() && process.env.GOOGLE_GEMINI_API_KEY) {
+        const { indexBusinessFinancialData } = await import(
+          "@/lib/agent/financial-indexer"
+        );
+        
+        // Fire-and-forget indexing
+        indexBusinessFinancialData(businessId).catch((err) => {
+          console.error("[Agent] Background indexing failed:", err);
+        });
+      }
       
       const response = await processAgentQuery({
         query,
@@ -102,10 +157,23 @@ const app = new Hono()
         userId: user.id,
       });
 
+      // Increment AI queries used
+      if (subscription) {
+        await db.subscription.update({
+          where: { userId: user.id },
+          data: { aiQueriesUsed: { increment: 1 } },
+        });
+      }
+
       console.log("[Agent API] Success:", { answer: response.answer.slice(0, 50), confidence: response.confidence });
       return c.json({
         success: true,
         data: response,
+        usage: {
+          aiQueriesUsed: aiQueriesUsed + 1,
+          aiQueriesLimit,
+          tier,
+        },
       });
     } catch (error) {
       console.error("[Agent Voice Error]", error);
@@ -336,8 +404,22 @@ const app = new Hono()
           "@/lib/agent"
         );
 
+        // Build and cache dashboard snapshot
         const snapshot = await buildDashboardSnapshot(businessId);
         await cacheDashboardSnapshot(snapshot);
+
+        // Index financial data into vector database (fire-and-forget for speed)
+        // This enables fast semantic search in the voice assistant
+        if (isVectorConfigured() && process.env.GOOGLE_GEMINI_API_KEY) {
+          const { indexBusinessFinancialData } = await import(
+            "@/lib/agent/financial-indexer"
+          );
+          
+          // Run indexing in background - don't block the response
+          indexBusinessFinancialData(businessId).catch((err) => {
+            console.error("[Agent] Background indexing failed:", err);
+          });
+        }
 
         return c.json({
           success: true,

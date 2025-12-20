@@ -11,6 +11,7 @@ import {
   FileText,
   PieChart,
   Briefcase,
+  Bot,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SignOutButton } from "@/components/auth/sign-out-button";
@@ -45,6 +46,11 @@ const navigation = [
     name: "Analytics",
     href: "/dashboard/analytics",
     icon: PieChart,
+  },
+  {
+    name: "Assistant",
+    href: "/dashboard/assistant",
+    icon: Bot,
   },
   {
     name: "Business",

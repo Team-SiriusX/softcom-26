@@ -3,6 +3,12 @@
  *
  * Coordinates RAG, memory, and LLM to produce grounded responses.
  * Single entry point for agent interactions.
+ *
+ * Performance optimizations:
+ * - Parallel fetching of context (RAG, dashboard, conversation)
+ * - Fire-and-forget logging (non-blocking)
+ * - Cached GenAI model instance
+ * - Minimal console logging in production
  */
 
 import {
@@ -21,7 +27,11 @@ import { buildPrompt, buildNoContextPrompt } from "./prompt";
 import { getDashboardContextForAgent } from "./dashboard-context";
 import { logAction } from "../upstash/redis";
 
+const IS_DEV = process.env.NODE_ENV === "development";
+
+// Cached instances for performance
 let genAIInstance: any | null = null;
+let cachedModel: any | null = null;
 
 async function getGenAI(): Promise<any> {
   if (!genAIInstance) {
@@ -29,15 +39,39 @@ async function getGenAI(): Promise<any> {
     if (!apiKey) {
       throw new Error("Missing GOOGLE_GEMINI_API_KEY");
     }
-    
+
     try {
       const { GoogleGenerativeAI } = await import("@google/generative-ai");
       genAIInstance = new GoogleGenerativeAI(apiKey);
     } catch {
-      throw new Error("@google/generative-ai package not installed. Run: pnpm add @google/generative-ai");
+      throw new Error(
+        "@google/generative-ai package not installed. Run: pnpm add @google/generative-ai"
+      );
     }
   }
   return genAIInstance;
+}
+
+function getModel(config: AgentConfig): any {
+  if (!cachedModel) {
+    const genAI = genAIInstance;
+    if (!genAI) throw new Error("GenAI not initialized");
+    cachedModel = genAI.getGenerativeModel({
+      model: "gemini-2.5-flash",
+      generationConfig: {
+        temperature: config.temperature,
+        maxOutputTokens: 300, // Keep responses concise for voice
+      },
+    });
+  }
+  return cachedModel;
+}
+
+// Fire-and-forget helper - doesn't block execution
+function fireAndForget(promise: Promise<unknown>): void {
+  promise.catch((err) => {
+    if (IS_DEV) console.error("[Agent] Background task failed:", err);
+  });
 }
 
 /**
@@ -50,85 +84,76 @@ export async function processAgentQuery(
   const startTime = Date.now();
   const { query, sessionId, businessId, userId } = request;
 
-  console.log("[Agent] Processing query:", { query: query.slice(0, 50), businessId, sessionId });
+  if (IS_DEV) {
+    console.log("[Agent] Processing query:", query.slice(0, 50));
+  }
 
   try {
-    // 1. Initialize/resume session
-    console.log("[Agent] Initializing session...");
-    await initializeSession(sessionId, businessId, userId);
+    // Initialize GenAI early (cached after first call)
+    const genAIPromise = getGenAI();
 
-    // 2. Save user message to conversation history
-    console.log("[Agent] Saving user message...");
-    await saveMessage(businessId, sessionId, "user", query);
+    // 1. Initialize session and save user message in parallel (both are non-blocking for main flow)
+    const sessionPromise = initializeSession(sessionId, businessId, userId);
 
-    // 3. Retrieve relevant context from vector store
-    console.log("[Agent] Retrieving RAG context...");
-    const ragContext = await retrieveContext(query, businessId, config);
-    console.log("[Agent] RAG context:", { hasContext: ragContext.hasContext, chunks: ragContext.chunks.length });
+    // 2. Fetch all context sources in parallel - this is the main optimization
+    const [ragContext, dashboard, conversationContext] = await Promise.all([
+      retrieveContext(query, businessId, config),
+      getDashboardContextForAgent(businessId, query),
+      getConversationContext(businessId, sessionId, config),
+    ]);
 
-    // 3b. Retrieve dashboard snapshot context (Redis keyword search)
-    const dashboard = await getDashboardContextForAgent(businessId, query);
+    // Ensure session is initialized before saving message
+    await sessionPromise;
+
+    // Save user message (fire-and-forget - don't block LLM generation)
+    fireAndForget(saveMessage(businessId, sessionId, "user", query));
+
     const dashboardContextText = dashboard.contextText;
-    console.log("[Agent] Dashboard context:", {
-      hasDashboardContext: !!dashboardContextText,
-      snapshot: dashboard.snapshot ? "cached-or-built" : "none",
-    });
 
-    // 4. Get conversation history for context
-    const conversationContext = await getConversationContext(
-      businessId,
-      sessionId,
-      config
-    );
+    if (IS_DEV) {
+      console.log("[Agent] Context fetched:", {
+        ragChunks: ragContext.chunks.length,
+        hasDashboard: !!dashboardContextText,
+        conversationMsgs: conversationContext.recentMessages.length,
+      });
+    }
 
-    console.log("[Agent] Conversation context:", {
-      recentMessages: conversationContext.recentMessages.length,
-    });
-
-    // 5. Build the prompt
+    // 3. Build the prompt (synchronous - fast)
     const hasAnyContext = ragContext.hasContext || !!dashboardContextText;
     const prompt = hasAnyContext
-      ? buildPrompt(query, ragContext, conversationContext, dashboardContextText)
+      ? buildPrompt(
+          query,
+          ragContext,
+          conversationContext,
+          dashboardContextText
+        )
       : buildNoContextPrompt(query);
 
-    console.log("[Agent] Prompt built:", {
-      length: prompt.length,
-      hasContext: ragContext.hasContext,
-    });
-
-    // 6. Generate response from LLM
-    console.log("[Agent] Generating LLM response...");
-    const genAI = await getGenAI();
-    const model = genAI.getGenerativeModel({
-      model: "gemini-2.5-flash",
-      generationConfig: {
-        temperature: config.temperature,
-        maxOutputTokens: 300, // Keep responses concise for voice
-      },
-    });
-
+    // 4. Generate response from LLM
+    await genAIPromise; // Ensure GenAI is ready
+    const model = getModel(config);
     const result = await model.generateContent(prompt);
     const answer = result.response.text().trim();
 
-    console.log("[Agent] LLM response received:", {
-      length: answer.length,
-    });
+    if (IS_DEV) {
+      console.log("[Agent] Response generated:", answer.length, "chars");
+    }
 
-    // 7. Save assistant response to conversation history
-    await saveMessage(businessId, sessionId, "assistant", answer);
-
-    // 8. Determine confidence level
+    // 5. Determine confidence (synchronous - fast)
     const confidence = determineConfidence(ragContext);
 
-    // 9. Log the action
-    await logAction(businessId, {
-      action: "agent_query",
-      input: query,
-      output: answer,
-      context: ragContext.chunks.map((c) => c.slice(0, 100)),
-      latencyMs: Date.now() - startTime,
-      success: true,
-    });
+    // 6. Fire-and-forget: save assistant response and log action
+    fireAndForget(saveMessage(businessId, sessionId, "assistant", answer));
+    fireAndForget(
+      logAction(businessId, {
+        action: "agent_query",
+        input: query,
+        output: answer,
+        context: ragContext.chunks.map((c) => c.slice(0, 100)),
+        latencyMs: Date.now() - startTime,
+        success: true,
+      })
+    );
 
     return {
       answer,
@@ -137,16 +162,18 @@ export async function processAgentQuery(
       sessionId,
     };
   } catch (error) {
-    // Log the error
-    await logAction(businessId, {
-      action: "agent_query",
-      input: query,
-      output: "",
-      context: [],
-      latencyMs: Date.now() - startTime,
-      success: false,
-      error: error instanceof Error ? error.message : "Unknown error",
-    });
+    // Fire-and-forget error logging
+    fireAndForget(
+      logAction(businessId, {
+        action: "agent_query",
+        input: query,
+        output: "",
+        context: [],
+        latencyMs: Date.now() - startTime,
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      })
+    );
 
     throw error;
   }
