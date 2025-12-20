@@ -31,7 +31,7 @@ export default function Features() {
   );
 
   return (
-    <section ref={containerRef} className="bg-white py-32 px-6">
+    <section id="features" ref={containerRef} className="bg-white py-32 px-6">
       <div className="mx-auto max-w-7xl">
         <div className="mb-20 max-w-2xl">
           <h2 className="text-5xl font-bold tracking-tight text-neutral-950 md:text-7xl">

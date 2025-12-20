@@ -47,6 +47,7 @@ export default function AISection() {
 
   return (
     <section
+      id="ai"
       ref={containerRef}
       className="relative flex h-screen w-full items-center justify-center bg-white overflow-hidden"
     >

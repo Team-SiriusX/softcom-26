@@ -4,9 +4,7 @@ import { AppSidebar } from "@/components/app-sidebar";
 import { BusinessSelector } from "@/components/business-selector";
 import { Button } from "@/components/ui/button";
 import { UserNav } from "@/components/auth/user-nav";
-import {
-  Building2,
-} from "lucide-react";
+import { Building2 } from "lucide-react";
 import Link from "next/link";
 
 export default function DashboardLayout({
@@ -27,13 +25,7 @@ export default function DashboardLayout({
         <header className="flex h-16 items-center justify-end gap-4 border-b bg-background/80 px-6 backdrop-blur">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
-                <BusinessSelector />
-                <Link href="/business">
-                <Button variant="outline" size="sm" className="rounded-full">
-                    <Building2 className="h-4 w-4 mr-2" />
-                    <span className="hidden sm:inline">Manage</span>
-                </Button>
-                </Link>
+              <BusinessSelector />
             </div>
 
             <UserNav />

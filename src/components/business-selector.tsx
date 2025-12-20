@@ -20,7 +20,7 @@ export function BusinessSelector() {
   if (!businesses || businesses.length === 0) {
     return (
       <Button variant="outline" size="sm" asChild>
-        <Link href="/business">
+        <Link href="/dashboard/business">
           <Building2 className="mr-2 h-4 w-4" />
           Create Business
         </Link>

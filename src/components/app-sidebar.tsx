@@ -10,6 +10,7 @@ import {
   Tag,
   FileText,
   PieChart,
+  Briefcase,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SignOutButton } from "@/components/auth/sign-out-button";
@@ -45,6 +46,11 @@ const navigation = [
     href: "/dashboard/analytics",
     icon: PieChart,
   },
+  {
+    name: "Business",
+    href: "/dashboard/business",
+    icon: Briefcase,
+  },
 ];
 
 export function AppSidebar() {
@@ -55,7 +61,7 @@ export function AppSidebar() {
       <div className="px-6 pt-6">
         <Link href="/" className="flex items-center gap-2">
           <div className="h-9 w-9 rounded-full bg-[#22D3EE] flex items-center justify-center shadow-sm">
-             <span className="font-bold text-black">L</span>
+            <span className="font-bold text-black">L</span>
           </div>
           <span className="text-lg font-semibold tracking-tight">LOGO</span>
         </Link>
@@ -84,18 +90,7 @@ export function AppSidebar() {
               </Button>
             );
           })}
-          
         </nav>
-      </div>
-
-      <div className="p-4">
-        <SignOutButton
-          variant="default"
-          className="w-full justify-start gap-3 rounded-2xl bg-[#22D3EE] hover:bg-[#22D3EE]/90 text-black px-5 py-3 font-semibold shadow-sm"
-          showIcon
-        >
-          LOGOUT
-        </SignOutButton>
       </div>
     </div>
   );

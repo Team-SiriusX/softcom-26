@@ -8,8 +8,8 @@ import {
   CategoryType,
 } from "@/generated/prisma";
 
-// const userId = "HWyCyGjc5MopTM2d0gIJxvFtn5zMrAOo"; // Mohid
-const userId = "JAKDvi8b5aNLnjTn4PVP9fDVXwKqgfKH"; // Ahmad
+const userId = "HWyCyGjc5MopTM2d0gIJxvFtn5zMrAOo"; // Mohid
+// const userId = "JAKDvi8b5aNLnjTn4PVP9fDVXwKqgfKH"; // Ahmad
 
 if (!userId) {
   console.error("Please provide a user ID");

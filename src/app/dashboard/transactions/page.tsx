@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useSelectedBusiness } from "@/components/providers/business-provider";
 import {
   useGetTransactions,
@@ -29,6 +29,8 @@ import {
   CheckCircle2,
   MoreHorizontal,
   Search,
+  X,
+  Upload,
 } from "lucide-react";
 import Link from "next/link";
 import {
@@ -56,18 +58,77 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { TransactionFormDialog } from "./_components/transaction-form-dialog";
+import { CSVImportDialog } from "./_components/csv-import-dialog";
 import { cn } from "@/lib/utils";
+import { DateRangePicker } from "@/components/ui/date-range-picker";
+import { DateRange } from "react-day-picker";
 
 export default function TransactionsPage() {
   const { selectedBusinessId } = useSelectedBusiness();
   const [query, setQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState<string | undefined>();
+  const [dateRange, setDateRange] = useState<DateRange | undefined>();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [isImportOpen, setIsImportOpen] = useState(false);
+
+  // Convert DateRange to string format for API
+  const startDate = dateRange?.from
+    ? format(dateRange.from, "yyyy-MM-dd")
+    : undefined;
+  const endDate = dateRange?.to
+    ? format(dateRange.to, "yyyy-MM-dd")
+    : undefined;
 
   const { data: transactionsData, isLoading } = useGetTransactions(
     selectedBusinessId || undefined,
-    { type: typeFilter }
+    { type: typeFilter, startDate, endDate }
   );
+
+  const exportToCSV = useCallback(() => {
+    const transactions = transactionsData?.data || [];
+    if (transactions.length === 0) return;
+
+    const headers = [
+      "Date",
+      "Description",
+      "Amount",
+      "Type",
+      "Account",
+      "Category",
+      "Reference",
+      "Notes",
+    ];
+    const rows = transactions.map((t: any) => [
+      format(new Date(t.date), "yyyy-MM-dd"),
+      t.description || "",
+      String(t.amount),
+      t.type,
+      t.ledgerAccount?.name || "",
+      t.category?.name || "",
+      t.referenceNumber || "",
+      t.notes || "",
+    ]);
+
+    const csvContent = [
+      headers.join(","),
+      ...rows.map((row: string[]) =>
+        row.map((cell) => `"${(cell ?? "").replace(/"/g, '""')}"`).join(",")
+      ),
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute(
+      "download",
+      `transactions_${format(new Date(), "yyyy-MM-dd")}.csv`
+    );
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }, [transactionsData]);
   const { data: accounts } = useGetLedgerAccounts(
     selectedBusinessId || undefined
   );
@@ -84,7 +145,10 @@ export default function TransactionsPage() {
         <AlertTitle>No Business Selected</AlertTitle>
         <AlertDescription>
           Please select a business from the header or{" "}
-          <Link href="/business" className="font-medium underline text-primary">
+          <Link
+            href="/dashboard/business"
+            className="font-medium underline text-primary"
+          >
             create a new one
           </Link>
           .
@@ -108,9 +172,9 @@ export default function TransactionsPage() {
     const haystack = [
       t.description,
       t.category?.name,
-      t.account?.name,
+      t.ledgerAccount?.name,
       t.type,
-      t.status,
+      t.isReconciled ? "reconciled" : "pending",
     ]
       .filter(Boolean)
       .join(" ")
@@ -130,28 +194,51 @@ export default function TransactionsPage() {
         <div className="flex items-center gap-2">
           <Button
             variant="outline"
-            className="rounded-full bg-background"
-            size="icon"
-            aria-label="Download"
+            className="rounded-full bg-background gap-2"
+            onClick={() => setIsImportOpen(true)}
+            title="Import CSV"
+          >
+            <Upload className="h-4 w-4" />
+            <span className="hidden sm:inline">Import</span>
+          </Button>
+          <Button
+            variant="outline"
+            className="rounded-full bg-background gap-2"
+            aria-label="Download CSV"
+            onClick={exportToCSV}
+            disabled={!transactionsData?.data?.length}
+            title="Export to CSV"
           >
             <Download className="h-4 w-4" />
+            <span className="hidden sm:inline">Export</span>
           </Button>
           <Button
             onClick={() => setIsCreateOpen(true)}
             className="rounded-full gap-2 bg-[#22D3EE] text-black hover:bg-[#22D3EE]/90"
           >
-          <Plus className="h-4 w-4" />
-          Add Transaction
+            <Plus className="h-4 w-4" />
+            Add Transaction
           </Button>
         </div>
       </div>
 
-      <TransactionFormDialog open={isCreateOpen} onOpenChange={setIsCreateOpen} />
+      <TransactionFormDialog
+        open={isCreateOpen}
+        onOpenChange={setIsCreateOpen}
+      />
+
+      <CSVImportDialog
+        open={isImportOpen}
+        onOpenChange={setIsImportOpen}
+        accounts={accounts || []}
+        categories={categories || []}
+      />
 
       <Card className="bg-card border border-border/60 shadow-sm">
         <CardHeader className="pb-4">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="relative w-full sm:w-80">
+          <div className="flex flex-col gap-4">
+            {/* Search Bar */}
+            <div className="relative w-full">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 value={query}
@@ -160,23 +247,54 @@ export default function TransactionsPage() {
                 className="h-10 pl-9 rounded-full bg-background"
               />
             </div>
-            <div className="flex items-center gap-2">
-              <Select
-                value={typeFilter ?? "ALL"}
-                onValueChange={(v) => setTypeFilter(v === "ALL" ? undefined : v)}
-              >
-                <SelectTrigger className="h-10 w-[160px] rounded-full bg-background">
-                  <Filter className="mr-2 h-4 w-4" />
-                  <SelectValue placeholder="All Types" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="ALL">All Types</SelectItem>
-                  <SelectItem value="INCOME">Income</SelectItem>
-                  <SelectItem value="EXPENSE">Expense</SelectItem>
-                </SelectContent>
-              </Select>
 
-              <div className="hidden sm:block text-sm text-muted-foreground">
+            {/* Filters Row */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 justify-between">
+              <div className="flex flex-wrap items-center gap-2">
+                {/* Type Filter */}
+                <Select
+                  value={typeFilter ?? "ALL"}
+                  onValueChange={(v) =>
+                    setTypeFilter(v === "ALL" ? undefined : v)
+                  }
+                >
+                  <SelectTrigger className="h-10 w-[160px] rounded-full bg-background">
+                    <Filter className="mr-2 h-4 w-4" />
+                    <SelectValue placeholder="All Types" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ALL">All Types</SelectItem>
+                    <SelectItem value="INCOME">Income</SelectItem>
+                    <SelectItem value="EXPENSE">Expense</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                {/* Date Range Picker */}
+                <DateRangePicker
+                  date={dateRange}
+                  onDateChange={setDateRange}
+                  placeholder="Select date range"
+                  className="w-full sm:w-[300px]"
+                />
+
+                {/* Active Filters Badge */}
+                {(typeFilter || dateRange) && (
+                  <Badge
+                    variant="secondary"
+                    className="rounded-full bg-primary/10 text-primary border-primary/20 h-8 px-3"
+                  >
+                    {[
+                      typeFilter && `Type: ${typeFilter}`,
+                      dateRange?.from && "Date Range",
+                    ]
+                      .filter(Boolean)
+                      .join(", ")}
+                  </Badge>
+                )}
+              </div>
+
+              {/* Results Count */}
+              <div className="text-sm text-muted-foreground whitespace-nowrap">
                 {filteredTransactions.length} result(s)
               </div>
             </div>
@@ -199,7 +317,10 @@ export default function TransactionsPage() {
               <TableBody>
                 {filteredTransactions.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
+                    <TableCell
+                      colSpan={7}
+                      className="h-24 text-center text-muted-foreground"
+                    >
                       No transactions found.
                     </TableCell>
                   </TableRow>
@@ -214,29 +335,39 @@ export default function TransactionsPage() {
                       </TableCell>
                       <TableCell>{transaction.description}</TableCell>
                       <TableCell>
-                        <Badge variant="secondary" className="rounded-full font-normal bg-muted/50">
+                        <Badge
+                          variant="secondary"
+                          className="rounded-full font-normal bg-muted/50"
+                        >
                           {transaction.category?.name || "Uncategorized"}
                         </Badge>
                       </TableCell>
                       <TableCell>
                         <span className="text-sm text-muted-foreground">
-                          {transaction.account?.name}
+                          {transaction.ledgerAccount?.name}
                         </span>
                       </TableCell>
-                      <TableCell className={cn(
-                        "text-right font-bold",
-                        transaction.type === "INCOME" ? "text-green-500" : "text-red-500"
-                      )}>
+                      <TableCell
+                        className={cn(
+                          "text-right font-bold",
+                          transaction.type === "INCOME"
+                            ? "text-green-500"
+                            : "text-red-500"
+                        )}
+                      >
                         {transaction.type === "INCOME" ? "+" : "-"}$
                         {transaction.amount.toLocaleString()}
                       </TableCell>
                       <TableCell className="text-center">
-                        {transaction.status === "RECONCILED" ? (
+                        {transaction.isReconciled ? (
                           <div className="flex justify-center">
-                             <CheckCircle2 className="h-5 w-5 text-green-500" />
+                            <CheckCircle2 className="h-5 w-5 text-green-500" />
                           </div>
                         ) : (
-                          <Badge variant="outline" className="rounded-full border-dashed border-muted-foreground/50 text-muted-foreground font-normal">
+                          <Badge
+                            variant="outline"
+                            className="rounded-full border-dashed border-muted-foreground/50 text-muted-foreground font-normal"
+                          >
                             Pending
                           </Badge>
                         )}
@@ -253,18 +384,29 @@ export default function TransactionsPage() {
                               <MoreHorizontal className="h-4 w-4" />
                             </Button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="rounded-xl">
-                            <DropdownMenuItem onClick={() => reconcileMutation.mutate(transaction.id)}>
+                          <DropdownMenuContent
+                            align="end"
+                            className="rounded-xl"
+                          >
+                            <DropdownMenuItem
+                              onClick={() =>
+                                reconcileMutation.mutate(transaction.id)
+                              }
+                            >
                               <CheckCircle2 className="mr-2 h-4 w-4" />
-                              {transaction.status === "RECONCILED" ? "Mark Pending" : "Reconcile"}
+                              {transaction.isReconciled
+                                ? "Mark Pending"
+                                : "Reconcile"}
                             </DropdownMenuItem>
                             <DropdownMenuItem>
                               <Edit className="mr-2 h-4 w-4" />
                               Edit
                             </DropdownMenuItem>
-                            <DropdownMenuItem 
-                                className="text-red-500 focus:text-red-500"
-                                onClick={() => deleteMutation.mutate(transaction.id)}
+                            <DropdownMenuItem
+                              className="text-red-500 focus:text-red-500"
+                              onClick={() =>
+                                deleteMutation.mutate(transaction.id)
+                              }
                             >
                               <Trash2 className="mr-2 h-4 w-4" />
                               Delete
