@@ -46,8 +46,8 @@ export const useCreateLedgerAccount = () => {
       const response = await client.api["ledger-accounts"]["$post"]({ json });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to create ledger account");
+        const errorData = await response.json() as { error?: string };
+        throw new Error(errorData.error || "Failed to create ledger account");
       }
 
       return await response.json();
@@ -74,10 +74,8 @@ export const useUpdateLedgerAccount = (id: string) => {
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(
-          error.data.description || "Failed to update ledger account"
-        );
+        const errorData = await response.json() as { error?: string };
+        throw new Error(errorData.error || "Failed to update ledger account");
       }
 
       return await response.json();
@@ -99,8 +97,8 @@ export const useDeleteLedgerAccount = () => {
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || "Failed to delete ledger account");
+        const errorData = await response.json() as { error?: string };
+        throw new Error(errorData.error || "Failed to delete ledger account");
       }
 
       return await response.json();
@@ -126,8 +124,8 @@ export const useBulkCreateDefaultAccounts = () => {
       ]["$post"]({ json });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || "Failed to create default accounts");
+        const errorData = await response.json() as { error?: string };
+        throw new Error(errorData.error || "Failed to create default accounts");
       }
 
       return await response.json();
