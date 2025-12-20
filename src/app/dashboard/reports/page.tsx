@@ -72,33 +72,33 @@ export default function ReportsPage() {
       
       csvContent += "ASSETS\n";
       csvContent += "Account,Balance\n";
-      csvContent += `Current Assets Total,$${balanceSheet.assets.currentAssets.total}\n`;
+      csvContent += `Current Assets Total,Rs ${balanceSheet.assets.currentAssets.total}\n`;
       balanceSheet.assets.currentAssets.accounts.forEach((acc: any) => {
-        csvContent += `"${acc.name}",$${acc.balance}\n`;
+        csvContent += `"${acc.name}",Rs ${acc.balance}\n`;
       });
-      csvContent += `Fixed Assets Total,$${balanceSheet.assets.fixedAssets.total}\n`;
+      csvContent += `Fixed Assets Total,Rs ${balanceSheet.assets.fixedAssets.total}\n`;
       balanceSheet.assets.fixedAssets.accounts.forEach((acc: any) => {
-        csvContent += `"${acc.name}",$${acc.balance}\n`;
+        csvContent += `"${acc.name}",Rs ${acc.balance}\n`;
       });
-      csvContent += `TOTAL ASSETS,$${balanceSheet.assets.total}\n\n`;
+      csvContent += `TOTAL ASSETS,Rs ${balanceSheet.assets.total}\n\n`;
       
       csvContent += "LIABILITIES\n";
-      csvContent += `Current Liabilities Total,$${balanceSheet.liabilities.currentLiabilities.total}\n`;
+      csvContent += `Current Liabilities Total,Rs ${balanceSheet.liabilities.currentLiabilities.total}\n`;
       balanceSheet.liabilities.currentLiabilities.accounts.forEach((acc: any) => {
-        csvContent += `"${acc.name}",$${acc.balance}\n`;
+        csvContent += `"${acc.name}",Rs ${acc.balance}\n`;
       });
-      csvContent += `TOTAL LIABILITIES,$${balanceSheet.liabilities.total}\n\n`;
+      csvContent += `TOTAL LIABILITIES,Rs ${balanceSheet.liabilities.total}\n\n`;
       
       csvContent += "EQUITY\n";
       balanceSheet.equity.ownersEquity.accounts.forEach((acc: any) => {
-        csvContent += `"${acc.name}",$${acc.balance}\n`;
+        csvContent += `"${acc.name}",Rs ${acc.balance}\n`;
       });
       balanceSheet.equity.retainedEarnings.accounts.forEach((acc: any) => {
-        csvContent += `"${acc.name}",$${acc.balance}\n`;
+        csvContent += `"${acc.name}",Rs ${acc.balance}\n`;
       });
-      csvContent += `TOTAL EQUITY,$${balanceSheet.equity.total}\n\n`;
+      csvContent += `TOTAL EQUITY,Rs ${balanceSheet.equity.total}\n\n`;
       
-      csvContent += `TOTAL LIABILITIES & EQUITY,$${balanceSheet.totals.liabilitiesAndEquity}\n`;
+      csvContent += `TOTAL LIABILITIES & EQUITY,Rs ${balanceSheet.totals.liabilitiesAndEquity}\n`;
       csvContent += `Status,${balanceSheet.totals.isBalanced ? "Balanced" : "Not Balanced"}\n`;
     } else if (reportType === "profit-loss" && profitLoss) {
       filename = `profit_loss_${startDate}_to_${endDate}.csv`;
@@ -108,17 +108,17 @@ export default function ReportsPage() {
       csvContent += "REVENUE\n";
       csvContent += "Account,Amount\n";
       profitLoss.revenue.operatingRevenue.accounts.forEach((acc: any) => {
-        csvContent += `"${acc.name}",$${acc.balance}\n`;
+        csvContent += `"${acc.name}",Rs ${acc.balance}\n`;
       });
-      csvContent += `TOTAL REVENUE,$${profitLoss.revenue.total}\n\n`;
+      csvContent += `TOTAL REVENUE,Rs ${profitLoss.revenue.total}\n\n`;
       
       csvContent += "EXPENSES\n";
       profitLoss.expenses.operatingExpenses.accounts.forEach((acc: any) => {
-        csvContent += `"${acc.name}",$${acc.balance}\n`;
+        csvContent += `"${acc.name}",Rs ${acc.balance}\n`;
       });
-      csvContent += `TOTAL EXPENSES,$${profitLoss.expenses.total}\n\n`;
+      csvContent += `TOTAL EXPENSES,Rs ${profitLoss.expenses.total}\n\n`;
       
-      csvContent += `NET INCOME,$${profitLoss.summary.netIncome}\n`;
+      csvContent += `NET INCOME,Rs ${profitLoss.summary.netIncome}\n`;
       csvContent += `Gross Profit Margin,${profitLoss.summary.grossProfitMargin.toFixed(1)}%\n`;
       csvContent += `Operating Margin,${profitLoss.summary.operatingMargin.toFixed(1)}%\n`;
       csvContent += `Net Profit Margin,${profitLoss.summary.netProfitMargin.toFixed(1)}%\n`;
@@ -128,15 +128,15 @@ export default function ReportsPage() {
       csvContent += `Period: ${format(new Date(startDate), "MMM dd, yyyy")} to ${format(new Date(endDate), "MMM dd, yyyy")}\n\n`;
       
       csvContent += "SUMMARY\n";
-      csvContent += `Opening Balance,$${cashFlow.summary.openingBalance}\n`;
-      csvContent += `Net Cash Flow,$${cashFlow.summary.netCashFlow}\n`;
-      csvContent += `Closing Balance,$${cashFlow.summary.closingBalance}\n\n`;
+      csvContent += `Opening Balance,Rs ${cashFlow.summary.openingBalance}\n`;
+      csvContent += `Net Cash Flow,Rs ${cashFlow.summary.netCashFlow}\n`;
+      csvContent += `Closing Balance,Rs ${cashFlow.summary.closingBalance}\n\n`;
       
       const cfByCategory = cashFlow as unknown as Record<string, { total: number }>;
       csvContent += "ACTIVITIES\n";
-      csvContent += `Operating Activities,$${cfByCategory.operating?.total ?? 0}\n`;
-      csvContent += `Investing Activities,$${cfByCategory.investing?.total ?? 0}\n`;
-      csvContent += `Financing Activities,$${cfByCategory.financing?.total ?? 0}\n`;
+      csvContent += `Operating Activities,Rs ${cfByCategory.operating?.total ?? 0}\n`;
+      csvContent += `Investing Activities,Rs ${cfByCategory.investing?.total ?? 0}\n`;
+      csvContent += `Financing Activities,Rs ${cfByCategory.financing?.total ?? 0}\n`;
     } else {
       return;
     }
@@ -283,7 +283,7 @@ export default function ReportsPage() {
                       </CardHeader>
                       <CardContent>
                         <div className="text-2xl font-bold tracking-tight">
-                          ${balanceSheet.assets.total.toLocaleString()}
+                          Rs {balanceSheet.assets.total.toLocaleString()}
                         </div>
                       </CardContent>
                     </Card>
@@ -293,7 +293,7 @@ export default function ReportsPage() {
                       </CardHeader>
                       <CardContent>
                         <div className="text-2xl font-bold tracking-tight">
-                          ${balanceSheet.liabilities.total.toLocaleString()}
+                          Rs {balanceSheet.liabilities.total.toLocaleString()}
                         </div>
                       </CardContent>
                     </Card>
@@ -303,7 +303,7 @@ export default function ReportsPage() {
                       </CardHeader>
                       <CardContent>
                         <div className="text-2xl font-bold tracking-tight">
-                          ${balanceSheet.equity.total.toLocaleString()}
+                          Rs {balanceSheet.equity.total.toLocaleString()}
                         </div>
                       </CardContent>
                     </Card>
@@ -497,7 +497,7 @@ export default function ReportsPage() {
                       </CardHeader>
                       <CardContent>
                         <div className={profitLoss.summary.netIncome >= 0 ? "text-2xl font-bold tracking-tight text-green-600" : "text-2xl font-bold tracking-tight text-red-600"}>
-                          ${profitLoss.summary.netIncome.toLocaleString()}
+                          Rs {profitLoss.summary.netIncome.toLocaleString()}
                         </div>
                       </CardContent>
                     </Card>
@@ -613,7 +613,7 @@ export default function ReportsPage() {
                       </CardHeader>
                       <CardContent>
                         <div className={cashFlow.summary.netCashFlow >= 0 ? "text-2xl font-bold tracking-tight text-green-600" : "text-2xl font-bold tracking-tight text-red-600"}>
-                          ${cashFlow.summary.netCashFlow.toLocaleString()}
+                          Rs {cashFlow.summary.netCashFlow.toLocaleString()}
                         </div>
                       </CardContent>
                     </Card>
@@ -622,7 +622,7 @@ export default function ReportsPage() {
                         <CardTitle className="text-sm text-muted-foreground">Closing Balance</CardTitle>
                       </CardHeader>
                       <CardContent>
-                        <div className="text-2xl font-bold tracking-tight">${cashFlow.summary.closingBalance.toLocaleString()}</div>
+                        <div className="text-2xl font-bold tracking-tight">Rs {cashFlow.summary.closingBalance.toLocaleString()}</div>
                       </CardContent>
                     </Card>
                   </div>
@@ -639,7 +639,7 @@ export default function ReportsPage() {
                           </CardHeader>
                           <CardContent>
                             <div className={total >= 0 ? "text-2xl font-bold text-green-600" : "text-2xl font-bold text-red-600"}>
-                              ${total.toLocaleString()}
+                              Rs {total.toLocaleString()}
                             </div>
                           </CardContent>
                         </Card>

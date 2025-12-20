@@ -94,7 +94,7 @@ const COLORS = [
 
 const moneyFormatter = new Intl.NumberFormat(undefined, {
   style: "currency",
-  currency: "USD",
+  currency: "PKR",
   maximumFractionDigits: 0,
 });
 
@@ -690,7 +690,7 @@ export default function AnalyticsPage() {
                       <YAxis
                         yAxisId="left"
                         tick={{ fontSize: 12 }}
-                        tickFormatter={(v) => `$${Math.round(v / 1000)}k`}
+                        tickFormatter={(v) => `Rs ${Math.round(v / 1000)}k`}
                       />
                       <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 12 }} />
                       <ChartTooltip
@@ -907,7 +907,7 @@ export default function AnalyticsPage() {
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="month" tick={{ fontSize: 12 }} interval={2} />
-                      <YAxis tick={{ fontSize: 12 }} tickFormatter={(v) => `$${Math.round(v / 1000)}k`} />
+                      <YAxis tick={{ fontSize: 12 }} tickFormatter={(v) => `Rs ${Math.round(v / 1000)}k`} />
                       <ChartTooltip
                         cursor={false}
                         content={
@@ -1128,7 +1128,7 @@ export default function AnalyticsPage() {
                     <ComposedChart data={cashFlowChartData} margin={{ left: 8, right: 8, top: 8, bottom: 8 }}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="category" tick={{ fontSize: 12 }} />
-                      <YAxis tick={{ fontSize: 12 }} tickFormatter={(v) => `$${Math.round(v / 1000)}k`} />
+                      <YAxis tick={{ fontSize: 12 }} tickFormatter={(v) => `Rs ${Math.round(v / 1000)}k`} />
                       <ChartTooltip
                         cursor={false}
                         content={
@@ -1253,7 +1253,7 @@ export default function AnalyticsPage() {
                     <ComposedChart data={balanceChartData} margin={{ left: 8, right: 8, top: 8, bottom: 8 }}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="date" tick={{ fontSize: 12 }} interval="preserveStartEnd" />
-                      <YAxis tick={{ fontSize: 12 }} tickFormatter={(v) => `$${Math.round(v / 1000)}k`} />
+                      <YAxis tick={{ fontSize: 12 }} tickFormatter={(v) => `Rs ${Math.round(v / 1000)}k`} />
                       <ChartTooltip
                         cursor={false}
                         content={

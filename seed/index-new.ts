@@ -39,16 +39,12 @@ function addDays(date: Date, days: number): Date {
 async function seed() {
   console.log("🌱 Starting database seed...");
   console.log(`Seeding for user: ${userId}`);
-
+  
   // Today's date
   const today = new Date("2025-12-20");
   // One year ago from today
   const startDate = addMonths(today, -12);
-  console.log(
-    `📅 Generating 1 year of data from ${
-      startDate.toISOString().split("T")[0]
-    } to ${today.toISOString().split("T")[0]}`
-  );
+  console.log(`📅 Generating 1 year of data from ${startDate.toISOString().split('T')[0]} to ${today.toISOString().split('T')[0]}`);
 
   try {
     // Create a sample business
@@ -405,15 +401,13 @@ async function seed() {
     for (let month = 0; month < 12; month++) {
       const monthStart = addMonths(startDate, month);
       const monthName = monthStart.toLocaleString("default", { month: "long" });
-      console.log(
-        `  📆 Generating transactions for ${monthName} ${monthStart.getFullYear()}...`
-      );
+      console.log(`  📆 Generating transactions for ${monthName} ${monthStart.getFullYear()}...`);
 
       // Equipment purchase (first month only)
       if (month === 0) {
         const equipmentDate = addDays(monthStart, 2);
         const equipmentAmount = 25000;
-
+        
         await db.transaction.create({
           data: {
             date: equipmentDate,
@@ -461,7 +455,7 @@ async function seed() {
       if (month === 2) {
         const loanDate = addDays(monthStart, 5);
         const loanAmount = 50000;
-
+        
         await db.transaction.create({
           data: {
             date: loanDate,
@@ -511,18 +505,9 @@ async function seed() {
         const salesDate = addDays(monthStart, randomAmount(1, 28));
         const salesAmount = randomAmount(8000, 35000);
         const accountCode = Math.random() > 0.6 ? "4000" : "4100"; // Sales or Service revenue
-        const description =
-          accountCode === "4000"
-            ? `Product sales - ${
-                ["Electronics", "Furniture", "Equipment", "Merchandise"][
-                  randomAmount(0, 3)
-                ]
-              }`
-            : `${
-                ["Consulting", "Maintenance", "Support", "Training"][
-                  randomAmount(0, 3)
-                ]
-              } services`;
+        const description = accountCode === "4000" 
+          ? `Product sales - ${["Electronics", "Furniture", "Equipment", "Merchandise"][randomAmount(0, 3)]}`
+          : `${["Consulting", "Maintenance", "Support", "Training"][randomAmount(0, 3)]} services`;
 
         await db.transaction.create({
           data: {
@@ -539,9 +524,7 @@ async function seed() {
                 {
                   date: salesDate,
                   entryNumber: `JE-${String(entryCounter++).padStart(3, "0")}`,
-                  description: `Cash from ${
-                    accountCode === "4000" ? "sales" : "services"
-                  }`,
+                  description: `Cash from ${accountCode === "4000" ? "sales" : "services"}`,
                   entryType: EntryType.STANDARD,
                   debitAmount: salesAmount,
                   creditAmount: 0,
@@ -551,9 +534,7 @@ async function seed() {
                 {
                   date: salesDate,
                   entryNumber: `JE-${String(entryCounter++).padStart(3, "0")}`,
-                  description: `${
-                    accountCode === "4000" ? "Sales" : "Service"
-                  } revenue earned`,
+                  description: `${accountCode === "4000" ? "Sales" : "Service"} revenue earned`,
                   entryType: EntryType.STANDARD,
                   debitAmount: 0,
                   creditAmount: salesAmount,
@@ -575,7 +556,7 @@ async function seed() {
       // Monthly salary payment
       const salaryDate = addDays(monthStart, 1);
       const salaryAmount = randomAmount(12000, 18000);
-
+      
       await db.transaction.create({
         data: {
           date: salaryDate,
@@ -622,7 +603,7 @@ async function seed() {
       // Monthly rent payment
       const rentDate = addDays(monthStart, randomAmount(1, 5));
       const rentAmount = randomAmount(2500, 3500);
-
+      
       await db.transaction.create({
         data: {
           date: rentDate,
@@ -669,7 +650,7 @@ async function seed() {
       // Monthly utilities
       const utilityDate = addDays(monthStart, randomAmount(8, 15));
       const utilityAmount = randomAmount(350, 650);
-
+      
       await db.transaction.create({
         data: {
           date: utilityDate,
@@ -717,18 +698,11 @@ async function seed() {
       if (month % 2 === 0 || month % 3 === 0) {
         const marketingDate = addDays(monthStart, randomAmount(10, 20));
         const marketingAmount = randomAmount(2000, 5000);
-
+        
         await db.transaction.create({
           data: {
             date: marketingDate,
-            description: `${
-              [
-                "Digital marketing",
-                "Social media",
-                "Print advertising",
-                "Event sponsorship",
-              ][randomAmount(0, 3)]
-            } campaign`,
+            description: `${["Digital marketing", "Social media", "Print advertising", "Event sponsorship"][randomAmount(0, 3)]} campaign`,
             amount: marketingAmount,
             type: TransactionType.EXPENSE,
             ledgerAccountId: accountMap.get("6300")!.id,
@@ -773,7 +747,7 @@ async function seed() {
       if (Math.random() > 0.4) {
         const suppliesDate = addDays(monthStart, randomAmount(5, 25));
         const suppliesAmount = randomAmount(500, 1500);
-
+        
         await db.transaction.create({
           data: {
             date: suppliesDate,
@@ -822,7 +796,7 @@ async function seed() {
       if (month % 3 === 0 && month > 0) {
         const inventoryDate = addDays(monthStart, randomAmount(7, 14));
         const inventoryAmount = randomAmount(15000, 25000);
-
+        
         await db.transaction.create({
           data: {
             date: inventoryDate,
@@ -871,7 +845,7 @@ async function seed() {
       if (month > 0 && month % 3 === 0) {
         const depreciationDate = addDays(monthStart, 15);
         const depreciationAmount = 625;
-
+        
         await db.transaction.create({
           data: {
             date: depreciationDate,
@@ -920,7 +894,7 @@ async function seed() {
       if (month >= 2) {
         const interestDate = addDays(monthStart, randomAmount(18, 22));
         const interestAmount = randomAmount(400, 700);
-
+        
         await db.transaction.create({
           data: {
             date: interestDate,
@@ -985,11 +959,7 @@ async function seed() {
     console.log(`- Business: ${business.name}`);
     console.log(`- Ledger Accounts: ${accounts.count}`);
     console.log(`- Categories: ${categories.count}`);
-    console.log(
-      `- Date Range: ${startDate.toISOString().split("T")[0]} to ${
-        today.toISOString().split("T")[0]
-      }`
-    );
+    console.log(`- Date Range: ${startDate.toISOString().split('T')[0]} to ${today.toISOString().split('T')[0]}`);
     console.log(`- Transactions: ${transactionCounter} (spanning 12 months)`);
     console.log(`- Journal Entries: ${entryCounter - 1}`);
     console.log(`- Final Cash Balance: $${cashBalance.toLocaleString()}`);

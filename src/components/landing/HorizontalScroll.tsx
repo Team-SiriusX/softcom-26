@@ -71,9 +71,9 @@ export default function HorizontalScroll() {
       const cards = gsap.utils.toArray<HTMLElement>(".horizontal-card");
       cards.forEach((card) => {
         gsap.from(card.querySelector(".card-inner"), {
-          scale: 0.8,
-          opacity: 0,
-          duration: 1,
+          scale: 0.9,
+          opacity: 0.5,
+          duration: 0.5,
           ease: "power3.out",
           scrollTrigger: {
             trigger: card,

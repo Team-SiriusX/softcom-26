@@ -141,7 +141,7 @@ export default function AccountsPage() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold tracking-tight">
-                  ${total.toLocaleString()}
+                  Rs {total.toLocaleString()}
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
                   {typeAccounts.length} account(s)
@@ -217,7 +217,7 @@ export default function AccountsPage() {
                         </span>
                       </TableCell>
                       <TableCell className="text-right font-medium">
-                        ${Number(account.currentBalance).toLocaleString()}
+                        Rs {Number(account.currentBalance).toLocaleString()}
                       </TableCell>
                       <TableCell>
                         <Badge variant="outline">{account.normalBalance}</Badge>
