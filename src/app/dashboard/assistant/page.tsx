@@ -8,14 +8,27 @@
 
 import { VoiceAssistant } from "@/components/assistant";
 import { useSelectedBusiness } from "@/components/providers/business-provider";
+import { useGetSubscription, useFeatureAccess } from "@/hooks/use-stripe";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { AlertCircle, Bot, Mic, MessageSquare, Zap } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
+import { AlertCircle, Bot, Mic, MessageSquare, Zap, Sparkles, TrendingUp } from "lucide-react";
 import Link from "next/link";
 
 export default function AssistantPage() {
   const { selectedBusinessId } = useSelectedBusiness();
+  const { data: subscription, isLoading: subscriptionLoading } = useGetSubscription();
+  const { canUseAI, aiQueriesRemaining } = useFeatureAccess();
+
+  // Calculate usage stats
+  const hasSubscription = subscription && "tier" in subscription;
+  const tier = hasSubscription ? subscription.tier : "FREE";
+  const aiQueriesUsed = hasSubscription ? subscription.aiQueriesUsed : 0;
+  const aiQueriesLimit = hasSubscription ? subscription.aiQueriesLimit : 0;
+  const usagePercentage = aiQueriesLimit > 0 ? Math.round((aiQueriesUsed / aiQueriesLimit) * 100) : 0;
+  const isNearLimit = usagePercentage >= 80;
 
   if (!selectedBusinessId) {
     return (
@@ -24,12 +37,61 @@ export default function AssistantPage() {
         <AlertTitle>No Business Selected</AlertTitle>
         <AlertDescription>
           Please select a business from the header or{" "}
-          <Link href="/business" className="font-medium underline">
+          <Link href="/dashboard/business" className="font-medium underline">
             create a new one
           </Link>
           .
         </AlertDescription>
       </Alert>
+    );
+  }
+
+  // Show upgrade prompt for FREE tier
+  if (!canUseAI && !subscriptionLoading) {
+    return (
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">AI Assistant</h1>
+            <p className="text-muted-foreground mt-1">
+              Voice-enabled financial assistant powered by your business data
+            </p>
+          </div>
+        </div>
+
+        {/* Upgrade Card */}
+        <Card className="border-dashed">
+          <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+            <div className="rounded-full bg-primary/10 p-4 mb-4">
+              <Sparkles className="h-8 w-8 text-primary" />
+            </div>
+            <h3 className="font-semibold text-xl mb-2">Upgrade to Unlock AI Assistant</h3>
+            <p className="text-muted-foreground max-w-md mb-6">
+              The AI-powered financial assistant is available on Pro and Business plans. 
+              Get intelligent insights, ask questions about your finances, and more.
+            </p>
+            <div className="flex gap-4">
+              <Button asChild>
+                <Link href="/pricing">
+                  <TrendingUp className="h-4 w-4 mr-2" />
+                  View Plans
+                </Link>
+              </Button>
+            </div>
+            <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-muted-foreground">
+              <div className="flex items-center gap-2">
+                <Badge variant="secondary">Pro</Badge>
+                <span>30 AI queries/month</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Badge variant="secondary">Business</Badge>
+                <span>150 AI queries/month</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     );
   }
 
@@ -43,11 +105,50 @@ export default function AssistantPage() {
             Voice-enabled financial assistant powered by your business data
           </p>
         </div>
-        <Badge variant="secondary" className="w-fit">
-          <Zap className="h-3 w-3 mr-1" />
-          RAG-Powered
-        </Badge>
+        <div className="flex items-center gap-3">
+          {/* Usage Badge */}
+          {hasSubscription && aiQueriesLimit > 0 && (
+            <Badge variant={isNearLimit ? "destructive" : "secondary"} className="gap-1">
+              <Zap className="h-3 w-3" />
+              {aiQueriesRemaining} queries left
+            </Badge>
+          )}
+          <Badge variant="outline" className="w-fit">
+            <Sparkles className="h-3 w-3 mr-1" />
+            {tier}
+          </Badge>
+        </div>
       </div>
+
+      {/* Usage Warning */}
+      {isNearLimit && aiQueriesRemaining > 0 && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Approaching Query Limit</AlertTitle>
+          <AlertDescription>
+            You've used {aiQueriesUsed} of {aiQueriesLimit} AI queries this month. 
+            Consider upgrading your plan for more queries.{" "}
+            <Link href="/pricing" className="font-medium underline">
+              View Plans
+            </Link>
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* Limit Reached Warning */}
+      {aiQueriesRemaining <= 0 && aiQueriesLimit > 0 && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Query Limit Reached</AlertTitle>
+          <AlertDescription>
+            You've used all {aiQueriesLimit} AI queries for this billing period. 
+            Upgrade your plan to continue using the AI assistant.{" "}
+            <Link href="/pricing" className="font-medium underline">
+              Upgrade Now
+            </Link>
+          </AlertDescription>
+        </Alert>
+      )}
 
       {/* Main Layout */}
       <div className="grid gap-6 lg:grid-cols-3">
@@ -58,6 +159,41 @@ export default function AssistantPage() {
 
         {/* Side Panel */}
         <div className="space-y-4">
+          {/* Usage Card */}
+          {hasSubscription && aiQueriesLimit > 0 && (
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Zap className="h-4 w-4 text-primary" />
+                  AI Usage
+                </CardTitle>
+                <CardDescription>
+                  Your query usage this billing period
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Queries used</span>
+                  <span className="font-medium">
+                    {aiQueriesUsed} / {aiQueriesLimit}
+                  </span>
+                </div>
+                <Progress 
+                  value={usagePercentage} 
+                  className={isNearLimit ? "[&>div]:bg-destructive" : ""}
+                />
+                {tier !== "BUSINESS" && (
+                  <Button variant="outline" size="sm" className="w-full" asChild>
+                    <Link href="/pricing">
+                      <TrendingUp className="h-3 w-3 mr-1" />
+                      Get More Queries
+                    </Link>
+                  </Button>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
           {/* Capabilities */}
           <Card>
             <CardHeader className="pb-3">

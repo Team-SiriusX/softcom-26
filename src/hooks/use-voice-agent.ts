@@ -6,7 +6,7 @@
  */
 
 import { useState, useCallback, useRef } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { client } from "@/lib/hono";
 import { useSelectedBusiness } from "@/components/providers/business-provider";
 
@@ -23,6 +23,12 @@ export interface AgentMessage {
   }>;
 }
 
+export interface AgentUsage {
+  aiQueriesUsed: number;
+  aiQueriesLimit: number;
+  tier: string;
+}
+
 export interface UseVoiceAgentReturn {
   messages: AgentMessage[];
   isProcessing: boolean;
@@ -30,13 +36,18 @@ export interface UseVoiceAgentReturn {
   sendMessage: (query: string) => Promise<void>;
   clearConversation: () => void;
   error: string | null;
+  limitReached: boolean;
+  upgradeRequired: boolean;
 }
 
 export function useVoiceAgent(): UseVoiceAgentReturn {
   const { selectedBusinessId } = useSelectedBusiness();
+  const queryClient = useQueryClient();
   const [messages, setMessages] = useState<AgentMessage[]>([]);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [limitReached, setLimitReached] = useState(false);
+  const [upgradeRequired, setUpgradeRequired] = useState(false);
 
   // Generate unique message ID
   const generateId = () =>
@@ -58,16 +69,34 @@ export function useVoiceAgent(): UseVoiceAgentReturn {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(
-          (errorData as { error?: string }).error || "Failed to process query"
-        );
+        const errorData = await response.json() as { 
+          error?: string; 
+          limitReached?: boolean;
+          upgradeRequired?: boolean;
+        };
+        
+        // Check for specific error types
+        if (errorData.limitReached) {
+          throw Object.assign(new Error(errorData.error || "AI query limit reached"), { limitReached: true });
+        }
+        if (errorData.upgradeRequired) {
+          throw Object.assign(new Error(errorData.error || "Upgrade required"), { upgradeRequired: true });
+        }
+        
+        throw new Error(errorData.error || "Failed to process query");
       }
 
       return response.json();
     },
     onSuccess: (result) => {
       if (result.success && result.data) {
+        // Invalidate subscription cache to update remaining queries
+        queryClient.invalidateQueries({ queryKey: ["subscription"] });
+        
+        // Reset error states
+        setLimitReached(false);
+        setUpgradeRequired(false);
+        
         // Update session ID if new
         if (result.data.sessionId && result.data.sessionId !== sessionId) {
           setSessionId(result.data.sessionId);
@@ -87,15 +116,31 @@ export function useVoiceAgent(): UseVoiceAgentReturn {
         setError(null);
       }
     },
-    onError: (err: Error) => {
+    onError: (err: Error & { limitReached?: boolean; upgradeRequired?: boolean }) => {
       setError(err.message);
+      
+      // Check for limit/upgrade errors
+      if (err.limitReached) {
+        setLimitReached(true);
+        // Invalidate subscription to get fresh data
+        queryClient.invalidateQueries({ queryKey: ["subscription"] });
+      }
+      if (err.upgradeRequired) {
+        setUpgradeRequired(true);
+      }
 
-      // Add error message to conversation
+      // Add error message to conversation with appropriate content
+      let errorContent = "I'm sorry, I encountered an error processing your request. Please try again.";
+      if (err.limitReached) {
+        errorContent = "You've reached your AI query limit for this billing period. Please upgrade your plan or wait until your limit resets.";
+      } else if (err.upgradeRequired) {
+        errorContent = "The AI assistant is not available on the Free plan. Please upgrade to Pro or Business to use this feature.";
+      }
+      
       const errorMessage: AgentMessage = {
         id: generateId(),
         role: "assistant",
-        content:
-          "I'm sorry, I encountered an error processing your request. Please try again.",
+        content: errorContent,
         timestamp: new Date(),
         confidence: "none",
       };
@@ -130,6 +175,8 @@ export function useVoiceAgent(): UseVoiceAgentReturn {
     setMessages([]);
     setSessionId(null);
     setError(null);
+    setLimitReached(false);
+    setUpgradeRequired(false);
   }, []);
 
   return {
@@ -139,5 +186,7 @@ export function useVoiceAgent(): UseVoiceAgentReturn {
     sendMessage,
     clearConversation,
     error,
+    limitReached,
+    upgradeRequired,
   };
 }

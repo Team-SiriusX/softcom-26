@@ -7,7 +7,7 @@
 
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useVoiceAgent } from "@/hooks/use-voice-agent";
 import { useRefreshDashboardContext } from "@/hooks/use-dashboard-context";
 import { useSpeechSynthesis } from "./voice-output";
@@ -56,10 +56,15 @@ export function VoiceAssistant({ className }: VoiceAssistantProps) {
   const [inputMode, setInputMode] = useState<"voice" | "text">("voice");
   const [textInput, setTextInput] = useState("");
   const [autoSpeak, setAutoSpeak] = useState(true);
+  
+  // Track if the last input was via voice for auto-play
+  const lastInputWasVoiceRef = useRef(false);
+  const lastSpokenMessageIdRef = useRef<string | null>(null);
 
   // Handle voice transcript
   const handleTranscript = useCallback(
     async (text: string) => {
+      lastInputWasVoiceRef.current = true;
       await sendMessage(text);
     },
     [sendMessage]
@@ -73,22 +78,31 @@ export function VoiceAssistant({ className }: VoiceAssistantProps) {
 
       const message = textInput.trim();
       setTextInput("");
+      lastInputWasVoiceRef.current = false;
       await sendMessage(message);
     },
     [textInput, isProcessing, sendMessage]
   );
 
-  // Auto-speak latest assistant message
+  // Auto-speak latest assistant message when input was via voice
   const lastAssistantMessage = messages
     .filter((m) => m.role === "assistant")
     .slice(-1)[0];
 
-  // Handle auto-speak for new messages
-  const handleNewMessage = useCallback(() => {
-    if (autoSpeak && lastAssistantMessage && speechSupported) {
+  // Auto-play audio response when input was via voice
+  useEffect(() => {
+    if (
+      lastAssistantMessage &&
+      lastAssistantMessage.id !== lastSpokenMessageIdRef.current &&
+      lastInputWasVoiceRef.current &&
+      autoSpeak &&
+      speechSupported &&
+      !isProcessing
+    ) {
+      lastSpokenMessageIdRef.current = lastAssistantMessage.id;
       speak(lastAssistantMessage.content);
     }
-  }, [autoSpeak, lastAssistantMessage, speechSupported, speak]);
+  }, [lastAssistantMessage, autoSpeak, speechSupported, isProcessing, speak]);
 
   if (!selectedBusinessId) {
     return (
