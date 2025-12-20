@@ -78,7 +78,7 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-foreground">
-              ${overview?.cash.current.toLocaleString() || 0}
+              Rs {overview?.cash.current.toLocaleString() || 0}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
               Current cash and bank balances
@@ -97,7 +97,7 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-foreground">
-              ${overview?.revenue.monthly.toLocaleString() || 0}
+              Rs {overview?.revenue.monthly.toLocaleString() || 0}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
               Revenue for current month
@@ -116,7 +116,7 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-foreground">
-              ${overview?.expenses.monthly.toLocaleString() || 0}
+              Rs {overview?.expenses.monthly.toLocaleString() || 0}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
               Expenses for current month
@@ -133,7 +133,7 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-foreground">
-              ${overview?.netIncome.monthly.toLocaleString() || 0}
+              Rs {overview?.netIncome.monthly.toLocaleString() || 0}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
               Profit margin: <span className={cn((overview?.netIncome.margin || 0) >= 0 ? "text-green-500" : "text-red-500")}>{overview?.netIncome.margin.toFixed(1) || 0}%</span>
@@ -157,7 +157,7 @@ export default function DashboardPage() {
           <CardContent className="space-y-4">
             <div>
               <div className="text-3xl font-bold text-foreground">
-                ${overview?.workingCapital.amount.toLocaleString() || 0}
+                Rs {overview?.workingCapital.amount.toLocaleString() || 0}
               </div>
               <p className="text-sm text-muted-foreground mt-1">
                 Current Ratio:{" "}
@@ -196,7 +196,7 @@ export default function DashboardPage() {
           <CardContent className="space-y-4">
             <div>
               <div className="text-3xl font-bold text-foreground">
-                ${overview?.burnRate.monthly.toLocaleString() || 0}
+                Rs {overview?.burnRate.monthly.toLocaleString() || 0}
               </div>
               <p className="text-sm text-muted-foreground mt-1">
                 per month average

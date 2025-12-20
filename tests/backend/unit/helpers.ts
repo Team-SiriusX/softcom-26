@@ -15,7 +15,7 @@ export const mockBusiness = {
   phone: "1234567890",
   address: "123 Test St",
   taxId: "TAX123",
-  currency: "USD",
+  currency: "PKR",
   fiscalYearStart: 1,
   userId: mockUser.id,
   createdAt: new Date(),

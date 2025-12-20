@@ -87,7 +87,7 @@ describe("Business API Endpoints", () => {
       const res = await testApp(business, "/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: "Test", currency: "USD" }),
+        body: JSON.stringify({ name: "Test", currency: "PKR" }),
       });
       const data = await res.json();
 
@@ -106,7 +106,7 @@ describe("Business API Endpoints", () => {
       const res = await testApp(business, "/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: "Test", currency: "USD" }),
+        body: JSON.stringify({ name: "Test", currency: "PKR" }),
       });
       const data = await res.json();
 

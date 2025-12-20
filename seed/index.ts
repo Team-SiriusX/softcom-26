@@ -60,7 +60,7 @@ async function seed() {
         phone: "+1-555-0123",
         address: "123 Business St, San Francisco, CA 94102",
         taxId: "12-3456789",
-        currency: "USD",
+        currency: "PKR",
         fiscalYearStart: 1, // January
         userId,
       },

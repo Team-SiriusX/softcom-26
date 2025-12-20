@@ -30,7 +30,7 @@ function formatTransaction(tx: any): string {
   const date = new Date(tx.date).toLocaleDateString();
   const amount = new Intl.NumberFormat("en-US", {
     style: "currency",
-    currency: "USD",
+    currency: "PKR",
   }).format(tx.amount);
 
   return `Transaction on ${date}: ${tx.type} of ${amount}. 
@@ -47,7 +47,7 @@ ${tx.isReconciled ? "Reconciled" : "Pending reconciliation"}.`;
 function formatLedgerAccount(account: any): string {
   const balance = new Intl.NumberFormat("en-US", {
     style: "currency",
-    currency: "USD",
+    currency: "PKR",
   }).format(account.currentBalance);
 
   return `Ledger Account: ${account.name}${account.code ? ` (Code: ${account.code})` : ""}.
@@ -68,7 +68,7 @@ function formatAnalytics(analytics: any, businessId: string): string {
   if (analytics.cash) {
     const cash = new Intl.NumberFormat("en-US", {
       style: "currency",
-      currency: "USD",
+      currency: "PKR",
     }).format(analytics.cash.current);
     sections.push(
       `Current cash balance: ${cash}. Cash change: ${analytics.cash.change.toFixed(1)}%.`
@@ -79,7 +79,7 @@ function formatAnalytics(analytics: any, businessId: string): string {
   if (analytics.revenue) {
     const revenue = new Intl.NumberFormat("en-US", {
       style: "currency",
-      currency: "USD",
+      currency: "PKR",
     }).format(analytics.revenue.monthly);
     sections.push(
       `Monthly revenue: ${revenue}. Revenue change: ${analytics.revenue.change.toFixed(1)}%.`
@@ -90,7 +90,7 @@ function formatAnalytics(analytics: any, businessId: string): string {
   if (analytics.expenses) {
     const expenses = new Intl.NumberFormat("en-US", {
       style: "currency",
-      currency: "USD",
+      currency: "PKR",
     }).format(analytics.expenses.monthly);
     sections.push(
       `Monthly expenses: ${expenses}. Expense change: ${analytics.expenses.change.toFixed(1)}%.`
@@ -101,7 +101,7 @@ function formatAnalytics(analytics: any, businessId: string): string {
   if (analytics.netIncome) {
     const netIncome = new Intl.NumberFormat("en-US", {
       style: "currency",
-      currency: "USD",
+      currency: "PKR",
     }).format(analytics.netIncome.monthly);
     sections.push(
       `Net income: ${netIncome}. Profit margin: ${analytics.netIncome.margin.toFixed(1)}%.`
@@ -112,7 +112,7 @@ function formatAnalytics(analytics: any, businessId: string): string {
   if (analytics.workingCapital) {
     const wc = new Intl.NumberFormat("en-US", {
       style: "currency",
-      currency: "USD",
+      currency: "PKR",
     }).format(analytics.workingCapital.amount);
     sections.push(
       `Working capital: ${wc}. Current ratio: ${analytics.workingCapital.currentRatio.toFixed(2)}.`
@@ -123,7 +123,7 @@ function formatAnalytics(analytics: any, businessId: string): string {
   if (analytics.burnRate) {
     const burnRate = new Intl.NumberFormat("en-US", {
       style: "currency",
-      currency: "USD",
+      currency: "PKR",
     }).format(analytics.burnRate.monthly);
     const runway =
       analytics.burnRate.runwayMonths === Infinity
