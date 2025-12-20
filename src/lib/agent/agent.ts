@@ -60,7 +60,7 @@ function getModel(config: AgentConfig): any {
       model: "gemini-2.5-flash",
       generationConfig: {
         temperature: config.temperature,
-        maxOutputTokens: 2048, // Allow complete responses without truncation
+        maxOutputTokens: 4096, // Allow complete responses without truncation
       },
     });
   }
