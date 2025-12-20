@@ -35,11 +35,12 @@ export function SignOutButton({
           },
           onSuccess: () => {
             toast.success("Signed out successfully");
-            router.push("/auth/sign-in");
-            router.refresh();
           },
         },
       });
+      // Always redirect after signOut completes
+      router.push("/auth/sign-in");
+      router.refresh();
     } catch (error) {
       toast.error("An unexpected error occurred");
       setLoading(false);

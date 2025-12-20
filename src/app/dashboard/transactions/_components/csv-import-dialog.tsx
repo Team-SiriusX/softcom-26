@@ -20,12 +20,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Upload, FileText, AlertCircle, CheckCircle2, X } from "lucide-react";
+import { Upload, FileText, AlertCircle, CheckCircle2, X, Lock } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { useSelectedBusiness } from "@/components/providers/business-provider";
 import { useBulkImportTransactions } from "@/hooks/use-transactions";
+import { useGetSubscription } from "@/hooks/use-stripe";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
+import Link from "next/link";
+import { TIER_LIMITS } from "@/lib/subscription-utils";
+import type { SubscriptionTier } from "@/generated/prisma";
 
 interface CSVRow {
   date: string;
@@ -65,6 +69,7 @@ export function CSVImportDialog({
   categories,
 }: CSVImportDialogProps) {
   const { selectedBusinessId } = useSelectedBusiness();
+  const { data: subscription } = useGetSubscription();
   const [file, setFile] = useState<File | null>(null);
   const [parsedData, setParsedData] = useState<CSVRow[]>([]);
   const [errors, setErrors] = useState<string[]>([]);
@@ -84,6 +89,10 @@ export function CSVImportDialog({
   });
 
   const bulkImportMutation = useBulkImportTransactions();
+
+  // Check if CSV import is allowed for user's subscription tier
+  const tier = (subscription && 'tier' in subscription ? subscription.tier : "FREE") as SubscriptionTier;
+  const canImportCSV = TIER_LIMITS[tier].features.csvImport;
 
   const handleFileChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -333,6 +342,56 @@ export function CSVImportDialog({
 
   const availableColumns =
     parsedData.length > 0 ? Object.keys(parsedData[0]) : [];
+
+  // If user doesn't have CSV import feature, show upgrade message
+  if (!canImportCSV) {
+    return (
+      <Dialog
+        open={open}
+        onOpenChange={(open) => {
+          onOpenChange(open);
+          if (!open) resetDialog();
+        }}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Lock className="h-5 w-5 text-muted-foreground" />
+              CSV Import Restricted
+            </DialogTitle>
+            <DialogDescription>
+              CSV import is available on Pro and Business plans.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="py-6">
+            <Alert className="bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800">
+              <AlertCircle className="h-4 w-4 text-amber-600" />
+              <AlertDescription className="text-amber-800 dark:text-amber-200">
+                <p className="font-medium mb-2">Upgrade to unlock CSV import</p>
+                <p className="text-sm mb-3">
+                  With Pro or Business, you can bulk import transactions from CSV files,
+                  saving time on data entry.
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  You can still export your data to CSV on the Free plan.
+                </p>
+              </AlertDescription>
+            </Alert>
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+            <Button asChild>
+              <Link href="/pricing">View Plans</Link>
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
     <Dialog

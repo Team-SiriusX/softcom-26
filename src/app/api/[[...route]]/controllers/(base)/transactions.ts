@@ -3,6 +3,61 @@ import { zValidator } from "@hono/zod-validator";
 import * as z from "zod";
 import { db } from "@/lib/db";
 import { TransactionType, BalanceType, EntryType } from "@/generated/prisma";
+import { TIER_LIMITS } from "@/lib/subscription-utils";
+
+// Helper function to check transaction limit for a business
+async function checkTransactionLimit(businessId: string): Promise<{ allowed: boolean; error?: string; tier?: string }> {
+  // Get the business and its owner's subscription
+  const business = await db.business.findUnique({
+    where: { id: businessId },
+    include: {
+      user: {
+        select: { subscriptionTier: true },
+      },
+    },
+  });
+
+  if (!business) {
+    return { allowed: false, error: "Business not found" };
+  }
+
+  const tier = business.user.subscriptionTier || "FREE";
+  const tierLimits = TIER_LIMITS[tier];
+
+  // If unlimited transactions, allow
+  if (tierLimits.transactionsLimit === -1) {
+    return { allowed: true, tier };
+  }
+
+  // Count transactions for this month across ALL user's businesses
+  const startOfMonth = new Date();
+  startOfMonth.setDate(1);
+  startOfMonth.setHours(0, 0, 0, 0);
+
+  const monthlyTransactionCount = await db.transaction.count({
+    where: {
+      business: {
+        userId: business.userId,
+      },
+      createdAt: {
+        gte: startOfMonth,
+      },
+    },
+  });
+
+  if (monthlyTransactionCount >= tierLimits.transactionsLimit) {
+    const upgradeMessage = tier === "FREE"
+      ? "Upgrade to Pro or Business for unlimited transactions."
+      : "";
+    return {
+      allowed: false,
+      error: `You have reached your monthly limit of ${tierLimits.transactionsLimit} transactions. ${upgradeMessage}`,
+      tier,
+    };
+  }
+
+  return { allowed: true, tier };
+}
 
 const app = new Hono()
   // Get all transactions with filters
@@ -20,6 +75,8 @@ const app = new Hono()
         isReconciled: z.string().transform((val) => val === "true").optional(),
         page: z.string().optional().transform((val) => Number(val || 1)),
         limit: z.string().optional().transform((val) => Number(val || 50)),
+        sortBy: z.enum(["date", "amount", "description", "createdAt"]).optional().default("date"),
+        sortOrder: z.enum(["asc", "desc"]).optional().default("desc"),
       })
     ),
     async (c) => {
@@ -33,6 +90,8 @@ const app = new Hono()
         isReconciled,
         page,
         limit,
+        sortBy,
+        sortOrder,
       } = c.req.valid("query");
 
       const skip = (page - 1) * limit;
@@ -59,7 +118,7 @@ const app = new Hono()
               select: { id: true, name: true, color: true, icon: true },
             },
           },
-          orderBy: { date: "desc" },
+          orderBy: { [sortBy]: sortOrder },
           skip,
           take: limit,
         }),
@@ -126,6 +185,12 @@ const app = new Hono()
     ),
     async (c) => {
       const data = c.req.valid("json");
+
+      // Check transaction limit
+      const limitCheck = await checkTransactionLimit(data.businessId);
+      if (!limitCheck.allowed) {
+        return c.json({ error: limitCheck.error }, 403);
+      }
 
       // Get both accounts to determine debits and credits
       const [mainAccount, contraAccount] = await Promise.all([
@@ -423,6 +488,29 @@ const app = new Hono()
     ),
     async (c) => {
       const { businessId, transactions } = c.req.valid("json");
+
+      // Check if user can import CSV (subscription feature check)
+      const business = await db.business.findUnique({
+        where: { id: businessId },
+        include: {
+          user: {
+            select: { subscriptionTier: true },
+          },
+        },
+      });
+
+      if (!business) {
+        return c.json({ error: "Business not found" }, 404);
+      }
+
+      const tier = business.user.subscriptionTier || "FREE";
+      const canImport = TIER_LIMITS[tier].features.csvImport;
+
+      if (!canImport) {
+        return c.json({ 
+          error: "CSV import is not available on the Free plan. Upgrade to Pro or Business to import transactions from CSV files." 
+        }, 403);
+      }
 
       // Pre-fetch all accounts for this business (cached lookup)
       const allAccounts = await db.ledgerAccount.findMany({

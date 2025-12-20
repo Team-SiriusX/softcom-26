@@ -7,8 +7,8 @@ import type { SubscriptionTier } from "@/generated/prisma";
 export const TIER_LIMITS = {
   FREE: {
     aiQueriesLimit: 0,
-    transactionsLimit: 50,
-    businessAccountsLimit: 1,
+    transactionsLimit: 50, // 50 transactions per month
+    businessAccountsLimit: 1, // Only 1 business account
     features: {
       basicAccounting: true,
       analytics: false,
@@ -20,12 +20,14 @@ export const TIER_LIMITS = {
       scenarioSimulations: false,
       whatsappIntegration: false,
       apiAccess: false,
+      csvExport: true, // Can export CSV
+      csvImport: false, // Cannot import CSV
     },
   },
   PRO: {
     aiQueriesLimit: 30,
-    transactionsLimit: -1, // unlimited
-    businessAccountsLimit: 3,
+    transactionsLimit: -1, // unlimited transactions
+    businessAccountsLimit: 3, // Up to 3 business accounts
     features: {
       basicAccounting: true,
       analytics: true,
@@ -37,12 +39,14 @@ export const TIER_LIMITS = {
       scenarioSimulations: false,
       whatsappIntegration: false,
       apiAccess: false,
+      csvExport: true, // Can export CSV
+      csvImport: true, // Can import CSV
     },
   },
   BUSINESS: {
     aiQueriesLimit: 150,
-    transactionsLimit: -1, // unlimited
-    businessAccountsLimit: -1, // unlimited
+    transactionsLimit: -1, // unlimited transactions
+    businessAccountsLimit: -1, // unlimited business accounts
     features: {
       basicAccounting: true,
       analytics: true,
@@ -54,6 +58,8 @@ export const TIER_LIMITS = {
       scenarioSimulations: true,
       whatsappIntegration: true,
       apiAccess: true,
+      csvExport: true, // Can export CSV
+      csvImport: true, // Can import CSV
     },
   },
 } as const;

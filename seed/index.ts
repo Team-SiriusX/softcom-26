@@ -8,8 +8,9 @@ import {
   CategoryType,
 } from "@/generated/prisma";
 
-const userId = "HWyCyGjc5MopTM2d0gIJxvFtn5zMrAOo"; // Mohid
+// const userId = "HWyCyGjc5MopTM2d0gIJxvFtn5zMrAOo"; // Mohid
 // const userId = "JAKDvi8b5aNLnjTn4PVP9fDVXwKqgfKH"; // Ahmad
+const userId = "QV5R49A9K3OvRZTjCXaBL6ibvMboyMwq"; // Hassan
 
 if (!userId) {
   console.error("Please provide a user ID");
@@ -22,45 +23,45 @@ async function seed() {
 
   try {
     // Delete existing user data (but not the user account)
-    console.log("🗑️  Cleaning up existing data...");
+    // console.log("🗑️  Cleaning up existing data...");
 
-    // Get all businesses for this user
-    const existingBusinesses = await db.business.findMany({
-      where: { userId },
-      select: { id: true },
-    });
+    // // Get all businesses for this user
+    // const existingBusinesses = await db.business.findMany({
+    //   where: { userId },
+    //   select: { id: true },
+    // });
 
-    const businessIds = existingBusinesses.map((b) => b.id);
+    // const businessIds = existingBusinesses.map((b) => b.id);
 
-    if (businessIds.length > 0) {
-      // Delete in order to respect foreign key constraints
-      await db.journalEntry.deleteMany({
-        where: { businessId: { in: businessIds } },
-      });
-      console.log("  ✓ Deleted journal entries");
+    // if (businessIds.length > 0) {
+    //   // Delete in order to respect foreign key constraints
+    //   await db.journalEntry.deleteMany({
+    //     where: { businessId: { in: businessIds } },
+    //   });
+    //   console.log("  ✓ Deleted journal entries");
 
-      await db.transaction.deleteMany({
-        where: { businessId: { in: businessIds } },
-      });
-      console.log("  ✓ Deleted transactions");
+    //   await db.transaction.deleteMany({
+    //     where: { businessId: { in: businessIds } },
+    //   });
+    //   console.log("  ✓ Deleted transactions");
 
-      await db.category.deleteMany({
-        where: { businessId: { in: businessIds } },
-      });
-      console.log("  ✓ Deleted categories");
+    //   await db.category.deleteMany({
+    //     where: { businessId: { in: businessIds } },
+    //   });
+    //   console.log("  ✓ Deleted categories");
 
-      await db.ledgerAccount.deleteMany({
-        where: { businessId: { in: businessIds } },
-      });
-      console.log("  ✓ Deleted ledger accounts");
+    //   await db.ledgerAccount.deleteMany({
+    //     where: { businessId: { in: businessIds } },
+    //   });
+    //   console.log("  ✓ Deleted ledger accounts");
 
-      await db.business.deleteMany({
-        where: { userId },
-      });
-      console.log("  ✓ Deleted businesses");
-    }
+    //   await db.business.deleteMany({
+    //     where: { userId },
+    //   });
+    //   console.log("  ✓ Deleted businesses");
+    // }
 
-    console.log("✅ Cleanup complete\n");
+    // console.log("✅ Cleanup complete\n");
 
     // Create a sample business
     console.log("Creating business...");

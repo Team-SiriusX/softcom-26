@@ -57,7 +57,8 @@ export const useCreateBusiness = () => {
       const response = await client.api.business.$post({ json });
 
       if (!response.ok) {
-        throw new Error("Failed to create business");
+        const error = await response.json();
+        throw new Error((error as { error?: string })?.error || "Failed to create business");
       }
 
       return await response.json();

@@ -31,6 +31,7 @@ import {
   Search,
   X,
   Upload,
+  ArrowUpDown,
 } from "lucide-react";
 import Link from "next/link";
 import {
@@ -62,6 +63,7 @@ import { CSVImportDialog } from "./_components/csv-import-dialog";
 import { cn } from "@/lib/utils";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { DateRange } from "react-day-picker";
+import { toast } from "sonner";
 
 export default function TransactionsPage() {
   const { selectedBusinessId } = useSelectedBusiness();
@@ -70,6 +72,8 @@ export default function TransactionsPage() {
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isImportOpen, setIsImportOpen] = useState(false);
+  const [sortBy, setSortBy] = useState<"date" | "amount" | "description" | "createdAt">("date");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
   // Convert DateRange to string format for API
   const startDate = dateRange?.from
@@ -81,7 +85,7 @@ export default function TransactionsPage() {
 
   const { data: transactionsData, isLoading } = useGetTransactions(
     selectedBusinessId || undefined,
-    { type: typeFilter, startDate, endDate }
+    { type: typeFilter, startDate, endDate, sortBy, sortOrder }
   );
 
   const exportToCSV = useCallback(() => {
@@ -111,7 +115,7 @@ export default function TransactionsPage() {
 
     const csvContent = [
       headers.join(","),
-      ...rows.map((row: string[]) =>
+    ...rows.map((row: string[]) =>
         row.map((cell) => `"${(cell ?? "").replace(/"/g, '""')}"`).join(",")
       ),
     ].join("\n");
@@ -277,6 +281,30 @@ export default function TransactionsPage() {
                   className="w-full sm:w-[300px]"
                 />
 
+                {/* Sort By */}
+                <Select
+                  value={`${sortBy}-${sortOrder}`}
+                  onValueChange={(v) => {
+                    const [field, order] = v.split("-") as [typeof sortBy, typeof sortOrder];
+                    setSortBy(field);
+                    setSortOrder(order);
+                  }}
+                >
+                  <SelectTrigger className="h-10 w-[180px] rounded-full bg-background">
+                    <ArrowUpDown className="mr-2 h-4 w-4" />
+                    <SelectValue placeholder="Sort by" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="date-desc">Date (Newest)</SelectItem>
+                    <SelectItem value="date-asc">Date (Oldest)</SelectItem>
+                    <SelectItem value="amount-desc">Amount (High-Low)</SelectItem>
+                    <SelectItem value="amount-asc">Amount (Low-High)</SelectItem>
+                    <SelectItem value="description-asc">Description (A-Z)</SelectItem>
+                    <SelectItem value="description-desc">Description (Z-A)</SelectItem>
+                    <SelectItem value="createdAt-desc">Recently Added</SelectItem>
+                  </SelectContent>
+                </Select>
+
                 {/* Active Filters Badge */}
                 {(typeFilter || dateRange) && (
                   <Badge
@@ -390,7 +418,18 @@ export default function TransactionsPage() {
                           >
                             <DropdownMenuItem
                               onClick={() =>
-                                reconcileMutation.mutate(transaction.id)
+                                reconcileMutation.mutate(transaction.id, {
+                                  onSuccess: () => {
+                                    toast.success(
+                                      transaction.isReconciled
+                                        ? "Transaction marked as pending"
+                                        : "Transaction reconciled"
+                                    );
+                                  },
+                                  onError: (error) => {
+                                    toast.error(error.message);
+                                  },
+                                })
                               }
                             >
                               <CheckCircle2 className="mr-2 h-4 w-4" />
@@ -404,9 +443,24 @@ export default function TransactionsPage() {
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               className="text-red-500 focus:text-red-500"
-                              onClick={() =>
-                                deleteMutation.mutate(transaction.id)
-                              }
+                              onClick={() => {
+                                if (
+                                  confirm(
+                                    "Are you sure you want to delete this transaction?"
+                                  )
+                                ) {
+                                  deleteMutation.mutate(transaction.id, {
+                                    onSuccess: () => {
+                                      toast.success(
+                                        "Transaction deleted successfully"
+                                      );
+                                    },
+                                    onError: (error) => {
+                                      toast.error(error.message);
+                                    },
+                                  });
+                                }
+                              }}
                             >
                               <Trash2 className="mr-2 h-4 w-4" />
                               Delete

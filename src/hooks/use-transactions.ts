@@ -14,6 +14,8 @@ export const useGetTransactions = (
     isReconciled?: boolean;
     page?: number;
     limit?: number;
+    sortBy?: "date" | "amount" | "description" | "createdAt";
+    sortOrder?: "asc" | "desc";
   }
 ) => {
   return useQuery({
