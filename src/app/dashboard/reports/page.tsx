@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useSelectedBusiness } from "@/components/providers/business-provider";
 import {
   useGetBalanceSheet,
@@ -18,9 +18,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle, Download, Calendar } from "lucide-react";
+import { AlertCircle, Download, Calendar, FileText } from "lucide-react";
 import Link from "next/link";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { format } from "date-fns";
 
 export default function ReportsPage() {
@@ -52,6 +58,106 @@ export default function ReportsPage() {
     endDate
   );
 
+  const [activeTab, setActiveTab] = useState("balance-sheet");
+
+  const exportToCSV = useCallback((reportType: string) => {
+    let csvContent = "";
+    const timestamp = format(new Date(), "yyyy-MM-dd");
+    let filename = "";
+
+    if (reportType === "balance-sheet" && balanceSheet) {
+      filename = `balance_sheet_${balanceSheetDate}.csv`;
+      csvContent = "Balance Sheet Report\n";
+      csvContent += `As of: ${format(new Date(balanceSheetDate), "MMMM dd, yyyy")}\n\n`;
+      
+      csvContent += "ASSETS\n";
+      csvContent += "Account,Balance\n";
+      csvContent += `Current Assets Total,$${balanceSheet.assets.currentAssets.total}\n`;
+      balanceSheet.assets.currentAssets.accounts.forEach((acc: any) => {
+        csvContent += `"${acc.name}",$${acc.balance}\n`;
+      });
+      csvContent += `Fixed Assets Total,$${balanceSheet.assets.fixedAssets.total}\n`;
+      balanceSheet.assets.fixedAssets.accounts.forEach((acc: any) => {
+        csvContent += `"${acc.name}",$${acc.balance}\n`;
+      });
+      csvContent += `TOTAL ASSETS,$${balanceSheet.assets.total}\n\n`;
+      
+      csvContent += "LIABILITIES\n";
+      csvContent += `Current Liabilities Total,$${balanceSheet.liabilities.currentLiabilities.total}\n`;
+      balanceSheet.liabilities.currentLiabilities.accounts.forEach((acc: any) => {
+        csvContent += `"${acc.name}",$${acc.balance}\n`;
+      });
+      csvContent += `TOTAL LIABILITIES,$${balanceSheet.liabilities.total}\n\n`;
+      
+      csvContent += "EQUITY\n";
+      balanceSheet.equity.ownersEquity.accounts.forEach((acc: any) => {
+        csvContent += `"${acc.name}",$${acc.balance}\n`;
+      });
+      balanceSheet.equity.retainedEarnings.accounts.forEach((acc: any) => {
+        csvContent += `"${acc.name}",$${acc.balance}\n`;
+      });
+      csvContent += `TOTAL EQUITY,$${balanceSheet.equity.total}\n\n`;
+      
+      csvContent += `TOTAL LIABILITIES & EQUITY,$${balanceSheet.totals.liabilitiesAndEquity}\n`;
+      csvContent += `Status,${balanceSheet.totals.isBalanced ? "Balanced" : "Not Balanced"}\n`;
+    } else if (reportType === "profit-loss" && profitLoss) {
+      filename = `profit_loss_${startDate}_to_${endDate}.csv`;
+      csvContent = "Profit & Loss Statement\n";
+      csvContent += `Period: ${format(new Date(startDate), "MMM dd, yyyy")} to ${format(new Date(endDate), "MMM dd, yyyy")}\n\n`;
+      
+      csvContent += "REVENUE\n";
+      csvContent += "Account,Amount\n";
+      profitLoss.revenue.operatingRevenue.accounts.forEach((acc: any) => {
+        csvContent += `"${acc.name}",$${acc.balance}\n`;
+      });
+      csvContent += `TOTAL REVENUE,$${profitLoss.revenue.total}\n\n`;
+      
+      csvContent += "EXPENSES\n";
+      profitLoss.expenses.operatingExpenses.accounts.forEach((acc: any) => {
+        csvContent += `"${acc.name}",$${acc.balance}\n`;
+      });
+      csvContent += `TOTAL EXPENSES,$${profitLoss.expenses.total}\n\n`;
+      
+      csvContent += `NET INCOME,$${profitLoss.summary.netIncome}\n`;
+      csvContent += `Gross Profit Margin,${profitLoss.summary.grossProfitMargin.toFixed(1)}%\n`;
+      csvContent += `Operating Margin,${profitLoss.summary.operatingMargin.toFixed(1)}%\n`;
+      csvContent += `Net Profit Margin,${profitLoss.summary.netProfitMargin.toFixed(1)}%\n`;
+    } else if (reportType === "cash-flow" && cashFlow) {
+      filename = `cash_flow_${startDate}_to_${endDate}.csv`;
+      csvContent = "Cash Flow Statement\n";
+      csvContent += `Period: ${format(new Date(startDate), "MMM dd, yyyy")} to ${format(new Date(endDate), "MMM dd, yyyy")}\n\n`;
+      
+      csvContent += "SUMMARY\n";
+      csvContent += `Opening Balance,$${cashFlow.summary.openingBalance}\n`;
+      csvContent += `Net Cash Flow,$${cashFlow.summary.netCashFlow}\n`;
+      csvContent += `Closing Balance,$${cashFlow.summary.closingBalance}\n\n`;
+      
+      const cfByCategory = cashFlow as unknown as Record<string, { total: number }>;
+      csvContent += "ACTIVITIES\n";
+      csvContent += `Operating Activities,$${cfByCategory.operating?.total ?? 0}\n`;
+      csvContent += `Investing Activities,$${cfByCategory.investing?.total ?? 0}\n`;
+      csvContent += `Financing Activities,$${cfByCategory.financing?.total ?? 0}\n`;
+    } else {
+      return;
+    }
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", filename);
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }, [balanceSheet, profitLoss, cashFlow, balanceSheetDate, startDate, endDate]);
+
+  const exportAllReportsToCSV = useCallback(() => {
+    exportToCSV("balance-sheet");
+    setTimeout(() => exportToCSV("profit-loss"), 100);
+    setTimeout(() => exportToCSV("cash-flow"), 200);
+  }, [exportToCSV]);
+
   if (!selectedBusinessId) {
     return (
       <Alert>
@@ -59,7 +165,7 @@ export default function ReportsPage() {
         <AlertTitle>No Business Selected</AlertTitle>
         <AlertDescription>
           Please select a business from the header or{" "}
-          <Link href="/business" className="font-medium underline">
+          <Link href="/dashboard/business" className="font-medium underline">
             create a new one
           </Link>
           .
@@ -77,10 +183,32 @@ export default function ReportsPage() {
             Balance sheet, P&L, and cash flow statements
           </p>
         </div>
-        <Button className="h-10 rounded-full bg-[#22D3EE] text-black hover:bg-[#22D3EE]/90">
-          <Download className="mr-2 h-4 w-4" />
-          Export PDF
-        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button className="h-10 rounded-full bg-[#22D3EE] text-black hover:bg-[#22D3EE]/90">
+              <Download className="mr-2 h-4 w-4" />
+              Export Reports
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="rounded-xl">
+            <DropdownMenuItem onClick={() => exportToCSV("balance-sheet")} disabled={!balanceSheet}>
+              <FileText className="mr-2 h-4 w-4" />
+              Balance Sheet (CSV)
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => exportToCSV("profit-loss")} disabled={!profitLoss}>
+              <FileText className="mr-2 h-4 w-4" />
+              Profit & Loss (CSV)
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => exportToCSV("cash-flow")} disabled={!cashFlow}>
+              <FileText className="mr-2 h-4 w-4" />
+              Cash Flow (CSV)
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={exportAllReportsToCSV} disabled={!balanceSheet && !profitLoss && !cashFlow}>
+              <Download className="mr-2 h-4 w-4" />
+              Export All Reports
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       <Card className="bg-card border border-border/60 shadow-sm">

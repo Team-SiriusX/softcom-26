@@ -76,7 +76,7 @@ export default function CategoriesPage() {
         <AlertTitle>No Business Selected</AlertTitle>
         <AlertDescription>
           Please select a business from the header or{" "}
-          <Link href="/business" className="font-medium underline">
+          <Link href="/dashboard/business" className="font-medium underline">
             create a new one
           </Link>
           .

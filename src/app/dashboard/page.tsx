@@ -39,7 +39,7 @@ export default function DashboardPage() {
         <AlertTitle>No Business Selected</AlertTitle>
         <AlertDescription>
           Please select a business from the header or{" "}
-          <Link href="/business" className="font-medium underline text-primary">
+          <Link href="/dashboard/business" className="font-medium underline text-primary">
             create a new one
           </Link>
           .

@@ -10,8 +10,7 @@ import {
   Tag,
   FileText,
   PieChart,
-  LogOut,
-  Bot,
+  Briefcase,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SignOutButton } from "@/components/auth/sign-out-button";
@@ -48,9 +47,9 @@ const navigation = [
     icon: PieChart,
   },
   {
-    name: "AI Assistant",
-    href: "/dashboard/assistant",
-    icon: Bot,
+    name: "Business",
+    href: "/dashboard/business",
+    icon: Briefcase,
   },
 ];
 
@@ -62,7 +61,7 @@ export function AppSidebar() {
       <div className="px-6 pt-6">
         <Link href="/" className="flex items-center gap-2">
           <div className="h-9 w-9 rounded-full bg-[#22D3EE] flex items-center justify-center shadow-sm">
-             <span className="font-bold text-black">L</span>
+            <span className="font-bold text-black">L</span>
           </div>
           <span className="text-lg font-semibold tracking-tight">LOGO</span>
         </Link>
@@ -73,33 +72,25 @@ export function AppSidebar() {
           {navigation.map((item) => {
             const isActive = pathname === item.href;
             return (
-              <Link key={item.href} href={item.href}>
-                <Button
-                  variant="ghost"
-                  className={cn(
-                    "w-full justify-start gap-3 rounded-2xl px-4 py-3 text-[15px] font-semibold transition-colors",
-                    isActive
-                      ? "bg-[#22D3EE] text-black hover:bg-[#22D3EE]/90 shadow-sm"
-                      : "text-sidebar-foreground hover:bg-[#22D3EE]/15 hover:text-foreground"
-                  )}
-                >
+              <Button
+                key={item.href}
+                variant="ghost"
+                className={cn(
+                  "w-full justify-start gap-3 rounded-2xl px-4 py-3 text-[15px] font-semibold transition-colors",
+                  isActive
+                    ? "bg-[#22D3EE] text-black hover:bg-[#22D3EE]/90 shadow-sm"
+                    : "text-sidebar-foreground hover:bg-[#22D3EE]/15 hover:text-foreground"
+                )}
+                asChild
+              >
+                <Link href={item.href}>
                   <item.icon className="h-5 w-5" />
                   {item.name}
-                </Button>
-              </Link>
+                </Link>
+              </Button>
             );
           })}
-          
         </nav>
-      </div>
-
-      <div className="p-4">
-        <SignOutButton
-          variant="default"
-          className="w-full justify-start gap-3 rounded-2xl bg-[#22D3EE] hover:bg-[#22D3EE]/90 text-black px-5 py-3 font-semibold shadow-sm"
-        >
-          LOGOUT
-        </SignOutButton>
       </div>
     </div>
   );

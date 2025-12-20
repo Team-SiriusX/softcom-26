@@ -167,3 +167,30 @@ export const useReconcileTransaction = () => {
     },
   });
 };
+
+// Bulk import transactions
+type BulkImportRequest = InferRequestType<
+  typeof client.api.transactions["bulk-import"]["$post"]
+>["json"];
+
+export const useBulkImportTransactions = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<any, Error, BulkImportRequest>({
+    mutationFn: async (json) => {
+      const response = await client.api.transactions["bulk-import"].$post({ json });
+
+      if (!response.ok) {
+        const error = await response.json() as { error?: string; message?: string };
+        throw new Error(error.message || error.error || "Failed to import transactions");
+      }
+
+      return await response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["analytics"] });
+      queryClient.invalidateQueries({ queryKey: ["ledger-accounts"] });
+    },
+  });
+};

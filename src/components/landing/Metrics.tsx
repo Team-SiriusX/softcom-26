@@ -58,6 +58,7 @@ export default function Metrics() {
 
   return (
     <section
+      id="metrics"
       ref={containerRef}
       className="relative w-full border-y border-neutral-100 bg-white py-32"
     >
