@@ -137,6 +137,19 @@ const app = new Hono()
       // Dynamic import to avoid errors when not configured
       const { processAgentQuery, generateSessionId } = await import("@/lib/agent");
       
+      // Trigger background indexing if this is a new session (first query)
+      // This ensures vector data is fresh without blocking the response
+      if (!sessionId && isVectorConfigured() && process.env.GOOGLE_GEMINI_API_KEY) {
+        const { indexBusinessFinancialData } = await import(
+          "@/lib/agent/financial-indexer"
+        );
+        
+        // Fire-and-forget indexing
+        indexBusinessFinancialData(businessId).catch((err) => {
+          console.error("[Agent] Background indexing failed:", err);
+        });
+      }
+      
       const response = await processAgentQuery({
         query,
         sessionId: sessionId || generateSessionId(),
@@ -391,8 +404,22 @@ const app = new Hono()
           "@/lib/agent"
         );
 
+        // Build and cache dashboard snapshot
         const snapshot = await buildDashboardSnapshot(businessId);
         await cacheDashboardSnapshot(snapshot);
+
+        // Index financial data into vector database (fire-and-forget for speed)
+        // This enables fast semantic search in the voice assistant
+        if (isVectorConfigured() && process.env.GOOGLE_GEMINI_API_KEY) {
+          const { indexBusinessFinancialData } = await import(
+            "@/lib/agent/financial-indexer"
+          );
+          
+          // Run indexing in background - don't block the response
+          indexBusinessFinancialData(businessId).catch((err) => {
+            console.error("[Agent] Background indexing failed:", err);
+          });
+        }
 
         return c.json({
           success: true,

@@ -5,3 +5,4 @@ export * from "./memory";
 export * from "./prompt";
 export * from "./agent";
 export * from "./dashboard-context";
+export * from "./financial-indexer";

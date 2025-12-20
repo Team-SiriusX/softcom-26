@@ -114,20 +114,69 @@ function tokenize(text: string): string[] {
 
 function docTextFromSnapshot(snapshot: DashboardSnapshot): string {
   const k = snapshot.kpis;
+  
+  // Calculate financial health indicators
+  const profitMargin = k.monthRevenue > 0 ? ((k.monthNetIncome / k.monthRevenue) * 100).toFixed(1) : "0";
+  const currentRatio = k.currentLiabilities !== 0 ? (k.currentAssets / k.currentLiabilities).toFixed(2) : "N/A";
+  const quickRatio = k.currentLiabilities !== 0 ? (k.cashLike / k.currentLiabilities).toFixed(2) : "N/A";
+  
+  // Financial health warnings
+  const warnings: string[] = [];
+  if (k.cashLike < 0) warnings.push("CRITICAL: Negative cash balance");
+  if (k.cashLike > 0 && k.burnRate3mo > 0 && (k.runwayMonths ?? 0) < 3) {
+    warnings.push(`URGENT: Only ${k.runwayMonths?.toFixed(1)} months of runway remaining`);
+  }
+  if (k.monthNetIncome < 0) warnings.push("WARNING: Operating at a loss this month");
+  if (k.workingCapital < 0) warnings.push("WARNING: Negative working capital");
+  
+  // Positive indicators
+  const strengths: string[] = [];
+  if (k.monthNetIncome > 0 && Number(profitMargin) > 20) {
+    strengths.push(`Strong profit margin at ${profitMargin}%`);
+  }
+  if (Number(currentRatio) > 2) {
+    strengths.push("Excellent liquidity position");
+  }
+  if (k.cashLike > k.burnRate3mo * 6) {
+    strengths.push("Healthy cash reserves (6+ months runway)");
+  }
+  
   const topCats = snapshot.expenseByCategory90d
     .slice(0, 6)
-    .map((c) => `${c.categoryName}: ${c.total}`)
+    .map((c) => `${c.categoryName}: $${c.total.toFixed(2)}`)
     .join("; ");
 
-  return [
-    `Dashboard KPIs (generated ${new Date(snapshot.generatedAt).toISOString()}):`,
-    `Monthly revenue: ${k.monthRevenue}. Monthly expenses: ${k.monthExpenses}. Net income: ${k.monthNetIncome}.`,
-    `Cash-like balance: ${k.cashLike}. Burn rate (3mo avg): ${k.burnRate3mo}. Runway (months): ${k.runwayMonths ?? "N/A"}.`,
-    `Working capital: ${k.workingCapital}. Current assets: ${k.currentAssets}. Current liabilities: ${k.currentLiabilities}.`,
-    topCats ? `Top expense categories (90d): ${topCats}.` : "",
+  const sections = [
+    `=== FINANCIAL DASHBOARD (Generated ${new Date(snapshot.generatedAt).toLocaleString()}) ===`,
+    ``,
+    `PERIOD: ${new Date(snapshot.period.monthStartISO).toLocaleDateString()} - ${new Date(snapshot.period.nowISO).toLocaleDateString()}`,
+    ``,
+    `INCOME STATEMENT (This Month):`,
+    `  Revenue: $${k.monthRevenue.toFixed(2)}`,
+    `  Expenses: $${k.monthExpenses.toFixed(2)}`,
+    `  Net Income: $${k.monthNetIncome.toFixed(2)} (${profitMargin}% margin)`,
+    ``,
+    `LIQUIDITY & CASH FLOW:`,
+    `  Cash Balance: $${k.cashLike.toFixed(2)}`,
+    `  Working Capital: $${k.workingCapital.toFixed(2)}`,
+    `  Current Assets: $${k.currentAssets.toFixed(2)}`,
+    `  Current Liabilities: $${k.currentLiabilities.toFixed(2)}`,
+    `  Current Ratio: ${currentRatio}`,
+    `  Quick Ratio: ${quickRatio}`,
+    ``,
+    `BURN RATE & RUNWAY (90-day avg):`,
+    `  Monthly Burn Rate: $${k.burnRate3mo.toFixed(2)}`,
+    `  Estimated Runway: ${k.runwayMonths ? `${k.runwayMonths.toFixed(1)} months` : "Infinite (profitable)"}`,
+    ``,
+    warnings.length > 0 ? `⚠️ FINANCIAL ALERTS:\n  - ${warnings.join("\\n  - ")}` : "",
+    strengths.length > 0 ? `✅ FINANCIAL STRENGTHS:\n  - ${strengths.join("\\n  - ")}` : "",
+    ``,
+    topCats ? `TOP EXPENSE CATEGORIES (90 days): ${topCats}` : "",
   ]
     .filter(Boolean)
-    .join("\n");
+    .join("\\n");
+
+  return sections;
 }
 
 type DashboardDoc = {

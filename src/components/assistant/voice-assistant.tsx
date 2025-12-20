@@ -15,8 +15,15 @@ import { VoiceInput } from "./voice-input";
 import { Conversation } from "./conversation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Send,
   Trash2,
@@ -26,9 +33,18 @@ import {
   Keyboard,
   Mic,
   RefreshCcw,
+  TrendingUp,
+  TrendingDown,
+  AlertTriangle,
+  CheckCircle2,
+  Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSelectedBusiness } from "@/components/providers/business-provider";
+import { useGetAnalyticsOverview } from "@/hooks/use-analytics";
+import { useGetTransactions } from "@/hooks/use-transactions";
+import { useGetLedgerAccounts } from "@/hooks/use-ledger-accounts";
+import { useMemo } from "react";
 
 interface VoiceAssistantProps {
   className?: string;
@@ -51,12 +67,140 @@ export function VoiceAssistant({ className }: VoiceAssistantProps) {
     error,
   } = useVoiceAgent();
 
-  const { speak, stop, isSpeaking, isSupported: speechSupported } = useSpeechSynthesis();
+  // Fetch financial data for proactive insights
+  const { data: analytics } = useGetAnalyticsOverview(
+    selectedBusinessId ?? undefined
+  );
+  const { data: recentTransactions } = useGetTransactions(
+    selectedBusinessId ?? undefined,
+    {
+      limit: 10,
+      sortBy: "date",
+      sortOrder: "desc",
+    }
+  );
+  const { data: accounts } = useGetLedgerAccounts(
+    selectedBusinessId ?? undefined
+  );
+
+  const {
+    speak,
+    stop,
+    isSpeaking,
+    isSupported: speechSupported,
+  } = useSpeechSynthesis();
 
   const [inputMode, setInputMode] = useState<"voice" | "text">("voice");
   const [textInput, setTextInput] = useState("");
   const [autoSpeak, setAutoSpeak] = useState(true);
-  
+  const [isIndexing, setIsIndexing] = useState(false);
+
+  // Calculate immediate financial insights
+  const financialInsights = useMemo(() => {
+    if (!analytics || !accounts) return null;
+
+    const insights: {
+      type: "warning" | "success" | "info";
+      message: string;
+      icon: any;
+    }[] = [];
+
+    // Check cash flow health
+    const cashAccount = accounts.find(
+      (acc: any) =>
+        acc.code === "1000" || acc.name.toLowerCase().includes("cash")
+    );
+    if (cashAccount) {
+      const cashBalance = Number(cashAccount.currentBalance);
+      if (cashBalance < 0) {
+        insights.push({
+          type: "warning",
+          message: `⚠️ Negative cash balance: ${new Intl.NumberFormat("en-US", {
+            style: "currency",
+            currency: "USD",
+          }).format(cashBalance)}`,
+          icon: AlertTriangle,
+        });
+      } else if (cashBalance < 1000) {
+        insights.push({
+          type: "warning",
+          message: `⚠️ Low cash reserves: ${new Intl.NumberFormat("en-US", {
+            style: "currency",
+            currency: "USD",
+          }).format(cashBalance)}`,
+          icon: AlertTriangle,
+        });
+      } else {
+        insights.push({
+          type: "success",
+          message: `✅ Healthy cash position: ${new Intl.NumberFormat("en-US", {
+            style: "currency",
+            currency: "USD",
+          }).format(cashBalance)}`,
+          icon: CheckCircle2,
+        });
+      }
+    }
+
+    // Analyze revenue trends
+    if (analytics.revenue?.monthly !== undefined) {
+      const revenue = Number(analytics.revenue.monthly);
+      if (revenue > 0) {
+        insights.push({
+          type: "success",
+          message: `📈 Monthly revenue: ${new Intl.NumberFormat("en-US", {
+            style: "currency",
+            currency: "USD",
+          }).format(revenue)}`,
+          icon: TrendingUp,
+        });
+      } else {
+        insights.push({
+          type: "warning",
+          message: "📉 No revenue recorded this month",
+          icon: TrendingDown,
+        });
+      }
+    }
+
+    // Profit margin check
+    if (analytics.netIncome?.margin !== undefined) {
+      const margin = Number(analytics.netIncome.margin);
+      if (margin < 0) {
+        insights.push({
+          type: "warning",
+          message: `⚠️ Operating at a loss: ${margin.toFixed(1)}% margin`,
+          icon: AlertTriangle,
+        });
+      } else if (margin > 20) {
+        insights.push({
+          type: "success",
+          message: `✅ Strong profit margin: ${margin.toFixed(1)}%`,
+          icon: CheckCircle2,
+        });
+      }
+    }
+
+    return insights.length > 0 ? insights : null;
+  }, [analytics, accounts]);
+
+  // Generate quick action suggestions based on recent activity
+  const quickSuggestions = useMemo(() => {
+    const suggestions: string[] = [];
+
+    if (!recentTransactions?.data || recentTransactions.data.length === 0) {
+      suggestions.push("Log your first transaction");
+      suggestions.push("Set up your chart of accounts");
+    } else {
+      suggestions.push("What's my cash flow this month?");
+      suggestions.push("Show me top expenses");
+      suggestions.push("How can I improve profitability?");
+      suggestions.push("Create a budget plan");
+    }
+
+    return suggestions;
+  }, [recentTransactions]);
+
   // Track if the last input was via voice for auto-play
   const lastInputWasVoiceRef = useRef(false);
   const lastSpokenMessageIdRef = useRef<string | null>(null);
@@ -124,21 +268,32 @@ export function VoiceAssistant({ className }: VoiceAssistantProps) {
       <CardHeader className="flex-shrink-0 border-b">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="rounded-full bg-primary/10 p-2">
-              <Bot className="h-5 w-5 text-primary" />
+            <div className="rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 p-2.5 shadow-lg">
+              <Sparkles className="h-5 w-5 text-white" />
             </div>
             <div>
-              <CardTitle className="text-lg">Financial Assistant</CardTitle>
-              {sessionId && (
-                <p className="text-xs text-muted-foreground">
-                  Session: {sessionId.slice(0, 20)}...
-                </p>
-              )}
-              {lastRefreshedAt && (
-                <p className="text-xs text-muted-foreground">
-                  Context refreshed: {lastRefreshedAt.toLocaleTimeString()}
-                </p>
-              )}
+              <div className="flex items-center gap-2">
+                <CardTitle className="text-lg bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
+                  Your Financial Advisor
+                </CardTitle>
+              </div>
+              <CardDescription className="text-xs">
+                {financialInsights && financialInsights.length > 0
+                  ? "I've analyzed your finances and have some insights"
+                  : "Ready to help with your financial decisions"}
+              </CardDescription>
+              <div className="flex items-center gap-2 mt-1">
+                {lastRefreshedAt && (
+                  <p className="text-xs text-muted-foreground">
+                    Updated: {lastRefreshedAt.toLocaleTimeString()}
+                  </p>
+                )}
+                {isIndexing && (
+                  <Badge variant="secondary" className="text-xs">
+                    Indexing...
+                  </Badge>
+                )}
+              </div>
             </div>
           </div>
 
@@ -149,18 +304,22 @@ export function VoiceAssistant({ className }: VoiceAssistantProps) {
               size="sm"
               onClick={async () => {
                 try {
+                  setIsIndexing(true);
                   await refreshDashboardContext();
+                  // Give indexing a moment to start
+                  setTimeout(() => setIsIndexing(false), 2000);
                 } catch {
+                  setIsIndexing(false);
                   // error is surfaced via dashboardContextError
                 }
               }}
               disabled={isRefreshingDashboardContext || isProcessing}
-              title="Refresh dashboard context"
+              title="Refresh dashboard context and index data for faster search"
             >
               <RefreshCcw
                 className={cn(
                   "h-4 w-4",
-                  isRefreshingDashboardContext && "animate-spin"
+                  (isRefreshingDashboardContext || isIndexing) && "animate-spin"
                 )}
               />
             </Button>
@@ -191,7 +350,9 @@ export function VoiceAssistant({ className }: VoiceAssistantProps) {
               onClick={() =>
                 setInputMode(inputMode === "voice" ? "text" : "voice")
               }
-              title={`Switch to ${inputMode === "voice" ? "text" : "voice"} input`}
+              title={`Switch to ${
+                inputMode === "voice" ? "text" : "voice"
+              } input`}
             >
               {inputMode === "voice" ? (
                 <Keyboard className="h-4 w-4" />
@@ -219,6 +380,66 @@ export function VoiceAssistant({ className }: VoiceAssistantProps) {
           </Badge>
         )}
       </CardHeader>
+
+      {/* Financial Insights Panel */}
+      {financialInsights &&
+        financialInsights.length > 0 &&
+        messages.length === 0 && (
+          <div className="border-b bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-950/20 dark:to-cyan-950/20 p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <Sparkles className="h-4 w-4 text-blue-600" />
+              <h3 className="text-sm font-semibold text-blue-900 dark:text-blue-100">
+                Immediate Financial Health Check
+              </h3>
+            </div>
+            <div className="space-y-2">
+              {financialInsights.map((insight, idx) => {
+                const Icon = insight.icon;
+                return (
+                  <Alert
+                    key={idx}
+                    variant={
+                      insight.type === "warning" ? "destructive" : "default"
+                    }
+                    className="py-2"
+                  >
+                    <Icon className="h-4 w-4" />
+                    <AlertDescription className="text-xs">
+                      {insight.message}
+                    </AlertDescription>
+                  </Alert>
+                );
+              })}
+            </div>
+
+            {/* Quick suggestions */}
+            <div className="mt-4">
+              <p className="text-xs text-muted-foreground mb-2">
+                💡 Try asking:
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {quickSuggestions.slice(0, 3).map((suggestion, idx) => (
+                  <Button
+                    key={idx}
+                    variant="outline"
+                    size="sm"
+                    className="text-xs h-7"
+                    onClick={() => {
+                      if (inputMode === "text") {
+                        setTextInput(suggestion);
+                      } else {
+                        handleTranscript(suggestion);
+                      }
+                    }}
+                    disabled={isProcessing}
+                  >
+                    {suggestion}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
 
       {/* Conversation */}
       <CardContent className="flex-1 overflow-hidden p-0">
@@ -252,7 +473,7 @@ export function VoiceAssistant({ className }: VoiceAssistantProps) {
             <Input
               value={textInput}
               onChange={(e) => setTextInput(e.target.value)}
-              placeholder="Ask about your finances..."
+              placeholder="Ask me anything: budgets, forecasts, tax planning..."
               disabled={isProcessing}
               className="flex-1"
             />
