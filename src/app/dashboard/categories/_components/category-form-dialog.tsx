@@ -1,8 +1,9 @@
 "use client";
 
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useSelectedBusiness } from "@/components/providers/business-provider";
-import { useCreateCategory } from "@/hooks/use-categories";
+import { useCreateCategory, useUpdateCategory } from "@/hooks/use-categories";
 import {
   Dialog,
   DialogContent,
@@ -27,6 +28,14 @@ import { toast } from "sonner";
 interface CategoryFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  category?: {
+    id: string;
+    name: string;
+    description?: string | null;
+    type: "INCOME" | "EXPENSE" | "TRANSFER";
+    icon?: string | null;
+    color?: string | null;
+  } | null;
 }
 
 const categoryIcons = ["💰", "🏠", "🚗", "🍔", "⚡", "📱", "🎮", "🎬", "🛒", "✈️", "🏥", "📚", "🎵", "🏋️"];
@@ -35,9 +44,13 @@ const categoryColors = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "
 export function CategoryFormDialog({
   open,
   onOpenChange,
+  category,
 }: CategoryFormDialogProps) {
   const { selectedBusinessId } = useSelectedBusiness();
   const createMutation = useCreateCategory();
+  const updateMutation = useUpdateCategory(category?.id ?? "__NO_CATEGORY_ID__");
+
+  const isEdit = !!category;
 
   const form = useForm({
     defaultValues: {
@@ -49,7 +62,51 @@ export function CategoryFormDialog({
     },
   });
 
+  useEffect(() => {
+    if (!open) return;
+    if (!category) {
+      form.reset({
+        name: "",
+        description: "",
+        type: "",
+        icon: "💰",
+        color: "#3b82f6",
+      });
+      return;
+    }
+
+    form.reset({
+      name: category.name ?? "",
+      description: category.description ?? "",
+      type: category.type ?? "",
+      icon: category.icon ?? "💰",
+      color: category.color ?? "#3b82f6",
+    });
+  }, [open, category, form]);
+
   const onSubmit = (data: any) => {
+    if (isEdit) {
+      updateMutation.mutate(
+        {
+          name: data.name,
+          description: data.description || undefined,
+          type: data.type,
+          icon: data.icon,
+          color: data.color,
+        },
+        {
+          onSuccess: () => {
+            toast.success("Category updated successfully");
+            onOpenChange(false);
+          },
+          onError: (error) => {
+            toast.error(error.message);
+          },
+        }
+      );
+      return;
+    }
+
     if (!selectedBusinessId) {
       toast.error("Please select a business first");
       return;
@@ -81,9 +138,11 @@ export function CategoryFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Create Category</DialogTitle>
+          <DialogTitle>{isEdit ? "Edit Category" : "Create Category"}</DialogTitle>
           <DialogDescription>
-            Add a new category to organize your transactions
+            {isEdit
+              ? "Update the category details"
+              : "Add a new category to organize your transactions"}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -99,6 +158,7 @@ export function CategoryFormDialog({
               <SelectContent>
                 <SelectItem value="INCOME">Income</SelectItem>
                 <SelectItem value="EXPENSE">Expense</SelectItem>
+                <SelectItem value="TRANSFER">Transfer</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -169,8 +229,17 @@ export function CategoryFormDialog({
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={createMutation.isPending}>
-              {createMutation.isPending ? "Creating..." : "Create Category"}
+            <Button
+              type="submit"
+              disabled={createMutation.isPending || updateMutation.isPending}
+            >
+              {isEdit
+                ? updateMutation.isPending
+                  ? "Saving..."
+                  : "Save Changes"
+                : createMutation.isPending
+                  ? "Creating..."
+                  : "Create Category"}
             </Button>
           </DialogFooter>
         </form>

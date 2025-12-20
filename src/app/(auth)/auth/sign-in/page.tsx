@@ -84,17 +84,17 @@ export default function SignIn() {
   return (
     <div className="space-y-6">
       <div className="space-y-2 text-center">
-        <h1 className="text-3xl font-bold text-white">
+        <h1 className="text-3xl font-bold text-neutral-900">
           Welcome Back
         </h1>
-        <p className="text-neutral-400">
+        <p className="text-neutral-500">
           Enter your credentials to access your account
         </p>
       </div>
 
       <form onSubmit={handleEmailSignIn} className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="email" className="text-neutral-300">
+          <Label htmlFor="email" className="text-neutral-700">
             Email
           </Label>
           <Input
@@ -105,13 +105,13 @@ export default function SignIn() {
             onChange={(e) => setEmail(e.target.value)}
             value={email}
             disabled={loading}
-            className="border-neutral-800 bg-[#0B0E14] text-white placeholder:text-neutral-600 focus:border-[#22D3EE] focus:ring-[#22D3EE]/20"
+            className="border-neutral-200 bg-white text-neutral-900 placeholder:text-neutral-400 focus:border-[#22D3EE] focus:ring-[#22D3EE]/20"
           />
         </div>
 
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <Label htmlFor="password" className="text-neutral-300">
+            <Label htmlFor="password" className="text-neutral-700">
               Password
             </Label>
             <Link
@@ -130,7 +130,7 @@ export default function SignIn() {
             onChange={(e) => setPassword(e.target.value)}
             disabled={loading}
             required
-            className="border-neutral-800 bg-[#0B0E14] text-white placeholder:text-neutral-600 focus:border-[#22D3EE] focus:ring-[#22D3EE]/20"
+            className="border-neutral-200 bg-white text-neutral-900 placeholder:text-neutral-400 focus:border-[#22D3EE] focus:ring-[#22D3EE]/20"
           />
         </div>
 
@@ -140,16 +140,16 @@ export default function SignIn() {
             checked={rememberMe}
             onCheckedChange={(checked) => setRememberMe(checked as boolean)}
             disabled={loading}
-            className="border-neutral-700 data-[state=checked]:bg-[#22D3EE] data-[state=checked]:border-[#22D3EE] data-[state=checked]:text-[#0B0E14]"
+            className="border-neutral-300 data-[state=checked]:bg-[#22D3EE] data-[state=checked]:border-[#22D3EE] data-[state=checked]:text-white"
           />
-          <Label htmlFor="remember" className="text-sm text-neutral-400">
+          <Label htmlFor="remember" className="text-sm text-neutral-500">
             Remember me for 30 days
           </Label>
         </div>
 
         <Button
           type="submit"
-          className="w-full bg-[#22D3EE] text-[#0B0E14] hover:bg-[#22D3EE]/90 font-semibold"
+          className="w-full bg-[#22D3EE] text-white hover:bg-[#22D3EE]/90 font-semibold shadow-lg shadow-[#22D3EE]/20"
           disabled={loading}
         >
           {loading ? (
@@ -161,10 +161,10 @@ export default function SignIn() {
 
         <div className="relative">
           <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t border-neutral-800" />
+            <span className="w-full border-t border-neutral-200" />
           </div>
           <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-[#0B0E14] px-2 text-neutral-500">
+            <span className="bg-white px-2 text-neutral-500">
               Or continue with
             </span>
           </div>
@@ -174,7 +174,7 @@ export default function SignIn() {
       <div className="grid grid-cols-2 gap-3">
         <Button
           variant="outline"
-          className="border-neutral-800 bg-[#0B0E14] text-white hover:bg-neutral-900 hover:text-white"
+          className="border-neutral-200 bg-white text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900"
           disabled={loading}
           onClick={() => handleSocialSignIn("google")}
         >
@@ -206,7 +206,7 @@ export default function SignIn() {
         </Button>
         <Button
           variant="outline"
-          className="border-neutral-800 bg-[#0B0E14] text-white hover:bg-neutral-900 hover:text-white"
+          className="border-neutral-200 bg-white text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900"
           disabled={loading}
           onClick={() => handleSocialSignIn("github")}
         >
@@ -226,7 +226,7 @@ export default function SignIn() {
         </Button>
       </div>
 
-      <div className="text-center text-sm text-neutral-400">
+      <div className="text-center text-sm text-neutral-500">
         Don&apos;t have an account?{" "}
         <Link
           href="/auth/sign-up"

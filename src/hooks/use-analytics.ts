@@ -211,3 +211,44 @@ export const useGetCashFlow = (
     enabled: !!businessId && !!startDate && !!endDate,
   });
 };
+
+// Get account balance history (time series)
+export const useGetAccountBalanceHistory = (
+  businessId?: string,
+  ledgerAccountId?: string,
+  startDate?: string,
+  endDate?: string,
+  interval: "daily" | "weekly" | "monthly" = "daily"
+) => {
+  return useQuery({
+    queryKey: [
+      "analytics",
+      "account-balance-history",
+      businessId,
+      ledgerAccountId,
+      startDate,
+      endDate,
+      interval,
+    ],
+    queryFn: async () => {
+      if (!businessId || !ledgerAccountId || !startDate || !endDate) return null;
+
+      const response = await client.api.analytics["account-balance-history"].$get({
+        query: {
+          businessId,
+          ledgerAccountId,
+          startDate,
+          endDate,
+          interval,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch account balance history");
+      }
+
+      return await response.json();
+    },
+    enabled: !!businessId && !!ledgerAccountId && !!startDate && !!endDate,
+  });
+};

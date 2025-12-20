@@ -61,8 +61,10 @@ export default function HorizontalScroll() {
           end: () => `+=${Math.abs(getScrollAmount())}`,
           scrub: 1,
           pin: true,
+          pinSpacing: true,
           invalidateOnRefresh: true,
           anticipatePin: 1,
+          markers: false,
         },
       });
 
@@ -86,11 +88,11 @@ export default function HorizontalScroll() {
         tween.kill();
       };
     },
-    { scope: triggerRef }
+    { scope: triggerRef, dependencies: [] }
   );
 
   return (
-    <section ref={triggerRef} className="relative overflow-hidden bg-white">
+    <section ref={triggerRef} className="relative overflow-hidden bg-white min-h-screen">
       {/* Background Blur */}
       <div className="absolute inset-0 z-0 pointer-events-none">
         <div className="absolute left-0 top-0 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#22D3EE]/5 blur-[100px]" />
