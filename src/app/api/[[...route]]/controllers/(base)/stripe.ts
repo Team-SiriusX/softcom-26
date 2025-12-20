@@ -6,6 +6,7 @@
 import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
+import Stripe from "stripe";
 import { stripe } from "@/lib/stripe";
 import { db } from "@/lib/db";
 import { currentUser } from "@/lib/current-user";
@@ -17,15 +18,12 @@ const app = new Hono()
    */
   .post(
     "/create-payment-intent",
-    zValidator(
-      "json",
-      z.object({
-        amount: z.number().positive(),
-        currency: z.string().default("usd"),
-        description: z.string().optional(),
-        metadata: z.record(z.string()).optional(),
-      })
-    ),
+    zValidator("json", z.object({
+      amount: z.number().positive(),
+      currency: z.string().default("usd"),
+      description: z.string().optional(),
+      metadata: z.record(z.string(), z.string()).optional(),
+    })),
     async (c) => {
       const user = await currentUser();
       if (!user) {
@@ -62,18 +60,15 @@ const app = new Hono()
    */
   .post(
     "/create-checkout-session",
-    zValidator(
-      "json",
-      z.object({
-        priceId: z.string().optional(),
-        amount: z.number().positive().optional(),
-        currency: z.string().default("usd"),
-        mode: z.enum(["payment", "subscription"]).default("payment"),
-        successUrl: z.string(),
-        cancelUrl: z.string(),
-        metadata: z.record(z.string()).optional(),
-      })
-    ),
+    zValidator("json", z.object({
+      priceId: z.string().optional(),
+      amount: z.number().positive().optional(),
+      currency: z.string().default("usd"),
+      mode: z.enum(["payment", "subscription"]).default("payment"),
+      successUrl: z.string(),
+      cancelUrl: z.string(),
+      metadata: z.record(z.string(), z.string()).optional(),
+    })),
     async (c) => {
       const user = await currentUser();
       if (!user) {
@@ -243,16 +238,18 @@ const app = new Hono()
         }
 
         // Get invoice to retrieve subscription details
-        const invoice = paymentIntent.invoice
-          ? await stripe.invoices.retrieve(paymentIntent.invoice as string)
+        const invoiceId = (paymentIntent as any).invoice;
+        const invoice = invoiceId
+          ? await stripe.invoices.retrieve(invoiceId as string)
           : null;
 
-        if (invoice && invoice.subscription) {
+        if (invoice && typeof (invoice as any).subscription === 'string') {
           // This is a subscription payment
-          const stripeSubscription = await stripe.subscriptions.retrieve(
-            invoice.subscription as string
-          );
-          const priceId = stripeSubscription.items.data[0].price.id;
+          const subscriptionId = (invoice as any).subscription as string;
+          const stripeSubscription = await stripe.subscriptions.retrieve(subscriptionId);
+          const priceId = typeof stripeSubscription.items.data[0].price === 'string' 
+            ? stripeSubscription.items.data[0].price 
+            : stripeSubscription.items.data[0].price.id;
 
           // Determine tier based on price ID
           let tier: "PRO" | "BUSINESS" = "PRO";
@@ -291,9 +288,9 @@ const app = new Hono()
             where: { userId },
             create: {
               userId,
-              stripeSubscriptionId: invoice.subscription as string,
+              stripeSubscriptionId: subscriptionId,
               stripePriceId: priceId,
-              stripeCurrentPeriodEnd: new Date(stripeSubscription.current_period_end * 1000),
+              stripeCurrentPeriodEnd: new Date((stripeSubscription as any).current_period_end * 1000),
               tier,
               status: "ACTIVE",
               billingCycle,
@@ -302,9 +299,9 @@ const app = new Hono()
               businessAccountsLimit,
             },
             update: {
-              stripeSubscriptionId: invoice.subscription as string,
+              stripeSubscriptionId: subscriptionId,
               stripePriceId: priceId,
-              stripeCurrentPeriodEnd: new Date(stripeSubscription.current_period_end * 1000),
+              stripeCurrentPeriodEnd: new Date((stripeSubscription as any).current_period_end * 1000),
               tier,
               status: "ACTIVE",
               billingCycle,
@@ -375,12 +372,17 @@ const app = new Hono()
     }
 
     try {
-      if (!user.stripeCustomerId) {
+      const dbUser = await db.user.findUnique({
+        where: { id: user.id },
+        select: { stripeCustomerId: true },
+      });
+
+      if (!dbUser?.stripeCustomerId) {
         return c.json({ error: "No Stripe customer ID found" }, 400);
       }
 
       const session = await stripe.billingPortal.sessions.create({
-        customer: user.stripeCustomerId,
+        customer: dbUser.stripeCustomerId,
         return_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard`,
       });
 

@@ -3,7 +3,14 @@
 import { useState } from "react";
 import { Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useSession } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
@@ -41,8 +48,12 @@ const pricingTiers = [
     tier: "PRO",
     monthlyPrice: 49,
     annualPrice: 470, // ~$39/month
-    monthlyPriceId: process.env.NEXT_PUBLIC_STRIPE_PRO_MONTHLY_PRICE_ID || "price_1SgDUTANCfmBmRcJNfiirntx",
-    annualPriceId: process.env.NEXT_PUBLIC_STRIPE_PRO_ANNUAL_PRICE_ID || "price_1SgDVzANCfmBmRcJgaCgAZFN",
+    monthlyPriceId:
+      process.env.NEXT_PUBLIC_STRIPE_PRO_MONTHLY_PRICE_ID ||
+      "price_1SgDUTANCfmBmRcJNfiirntx",
+    annualPriceId:
+      process.env.NEXT_PUBLIC_STRIPE_PRO_ANNUAL_PRICE_ID ||
+      "price_1SgDVzANCfmBmRcJgaCgAZFN",
     description: "AI-powered financial intelligence for growing businesses",
     features: [
       { text: "Everything in FREE, plus:", included: true, bold: true },
@@ -50,7 +61,11 @@ const pricingTiers = [
       { text: "Up to 3 business accounts", included: true },
       { text: "Full analytics dashboard", included: true },
       { text: "Advanced financial reports", included: true },
-      { text: "Strategic CFO Agent (Plan Mode)", included: true, highlight: true },
+      {
+        text: "Strategic CFO Agent (Plan Mode)",
+        included: true,
+        highlight: true,
+      },
       { text: "7-day cash flow predictions", included: true },
       { text: "30 AI queries per month", included: true },
       { text: "Automated alerts & warnings", included: true },
@@ -68,12 +83,20 @@ const pricingTiers = [
     tier: "BUSINESS",
     monthlyPrice: 99,
     annualPrice: 950, // ~$79/month
-    monthlyPriceId: process.env.NEXT_PUBLIC_STRIPE_BUSINESS_MONTHLY_PRICE_ID || "price_1SgDVbANCfmBmRcJi74rbyDI",
-    annualPriceId: process.env.NEXT_PUBLIC_STRIPE_BUSINESS_ANNUAL_PRICE_ID || "price_1SgDVBANCfmBmRcJdGBajtkq",
+    monthlyPriceId:
+      process.env.NEXT_PUBLIC_STRIPE_BUSINESS_MONTHLY_PRICE_ID ||
+      "price_1SgDVbANCfmBmRcJi74rbyDI",
+    annualPriceId:
+      process.env.NEXT_PUBLIC_STRIPE_BUSINESS_ANNUAL_PRICE_ID ||
+      "price_1SgDVBANCfmBmRcJdGBajtkq",
     description: "Complete AI CFO system with real-time crisis management",
     features: [
       { text: "Everything in PRO, plus:", included: true, bold: true },
-      { text: "Tactical Advisor Agent (Now Mode)", included: true, highlight: true },
+      {
+        text: "Tactical Advisor Agent (Now Mode)",
+        included: true,
+        highlight: true,
+      },
       { text: "Real-time crisis response chat", included: true },
       { text: "30-day cash flow predictions", included: true },
       { text: "150 AI queries per month", included: true },
@@ -120,25 +143,27 @@ export default function PricingPage() {
     setLoading(tier);
 
     try {
-      const response = await client.api.stripe["create-checkout-session"].$post({
-        json: {
-          priceId,
-          mode: "subscription",
-          successUrl: `${window.location.origin}/dashboard?subscription=success`,
-          cancelUrl: `${window.location.origin}/pricing?subscription=canceled`,
-          metadata: {
-            userId: session.user.id,
-            tier,
+      const response = await client.api.stripe["create-checkout-session"].$post(
+        {
+          json: {
+            priceId,
+            mode: "subscription",
+            successUrl: `${window.location.origin}/dashboard?subscription=success`,
+            cancelUrl: `${window.location.origin}/pricing?subscription=canceled`,
+            metadata: {
+              userId: session.user.id,
+              tier,
+            },
           },
-        },
-      });
+        }
+      );
 
       if (!response.ok) {
         throw new Error("Failed to create checkout session");
       }
 
       const data = await response.json();
-      
+
       if (data.url) {
         window.location.href = data.url;
       } else {
@@ -151,18 +176,24 @@ export default function PricingPage() {
     }
   };
 
-  const getPrice = (tier: typeof pricingTiers[0]) => {
+  const getPrice = (tier: (typeof pricingTiers)[0]) => {
     if (tier.monthlyPrice === 0) return "Free";
-    
-    const price = billingCycle === "monthly" ? tier.monthlyPrice : tier.annualPrice;
-    const perMonth = billingCycle === "annual" ? ` (${Math.round(tier.annualPrice / 12)}/mo)` : "/mo";
-    
+
+    const price =
+      billingCycle === "monthly" ? tier.monthlyPrice : tier.annualPrice;
+    const perMonth =
+      billingCycle === "annual"
+        ? ` (${Math.round(tier.annualPrice / 12)}/mo)`
+        : "/mo";
+
     return `$${price}${billingCycle === "annual" ? "/yr" : perMonth}`;
   };
 
-  const getPriceId = (tier: typeof pricingTiers[0]) => {
+  const getPriceId = (tier: (typeof pricingTiers)[0]) => {
     if (tier.tier === "FREE") return undefined;
-    return billingCycle === "monthly" ? tier.monthlyPriceId : tier.annualPriceId;
+    return billingCycle === "monthly"
+      ? tier.monthlyPriceId
+      : tier.annualPriceId;
   };
 
   return (
@@ -243,15 +274,27 @@ export default function PricingPage() {
                     <li
                       key={index}
                       className={`flex items-start gap-2 ${
-                        feature.bold ? "font-semibold mt-4" : ""
-                      } ${feature.highlight ? "text-primary" : ""}`}
+                        "bold" in feature && feature.bold
+                          ? "font-semibold mt-4"
+                          : ""
+                      } ${
+                        "highlight" in feature && feature.highlight
+                          ? "text-primary"
+                          : ""
+                      }`}
                     >
                       {feature.included ? (
                         <Check className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
                       ) : (
                         <X className="h-5 w-5 text-gray-300 shrink-0 mt-0.5" />
                       )}
-                      <span className={!feature.included ? "text-muted-foreground line-through" : ""}>
+                      <span
+                        className={
+                          !feature.included
+                            ? "text-muted-foreground line-through"
+                            : ""
+                        }
+                      >
                         {feature.text}
                       </span>
                     </li>
@@ -277,11 +320,15 @@ export default function PricingPage() {
         {/* FAQ or Additional Info */}
         <div className="mt-16 text-center text-muted-foreground">
           <p className="mb-2">
-            All paid plans include a 14-day free trial. No credit card required to start.
+            All paid plans include a 14-day free trial. No credit card required
+            to start.
           </p>
           <p>
             Questions? Contact us at{" "}
-            <a href="mailto:support@example.com" className="text-primary hover:underline">
+            <a
+              href="mailto:support@example.com"
+              className="text-primary hover:underline"
+            >
               support@example.com
             </a>
           </p>

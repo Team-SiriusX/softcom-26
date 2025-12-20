@@ -99,25 +99,28 @@ export const useCreatePortalSession = () => {
 export const useFeatureAccess = () => {
   const { data: subscription } = useGetSubscription();
 
+  // Type guard to check if subscription has tier property
+  const hasValidSubscription = subscription && 'tier' in subscription;
+
   return {
-    canUseAI: subscription?.tier !== "FREE",
-    canUseStrategicCFO: subscription?.tier === "PRO" || subscription?.tier === "BUSINESS",
-    canUseTacticalAdvisor: subscription?.tier === "BUSINESS",
-    canCreate30DayPredictions: subscription?.tier === "BUSINESS",
-    aiQueriesRemaining: subscription
+    canUseAI: hasValidSubscription && subscription.tier !== "FREE",
+    canUseStrategicCFO: hasValidSubscription && (subscription.tier === "PRO" || subscription.tier === "BUSINESS"),
+    canUseTacticalAdvisor: hasValidSubscription && subscription.tier === "BUSINESS",
+    canCreate30DayPredictions: hasValidSubscription && subscription.tier === "BUSINESS",
+    aiQueriesRemaining: hasValidSubscription
       ? subscription.aiQueriesLimit - subscription.aiQueriesUsed
       : 0,
-    hasUnlimitedTransactions: subscription?.transactionsLimit === -1,
-    transactionsRemaining: subscription
+    hasUnlimitedTransactions: hasValidSubscription && subscription.transactionsLimit === -1,
+    transactionsRemaining: hasValidSubscription
       ? subscription.transactionsLimit === -1
         ? Infinity
         : subscription.transactionsLimit - subscription.transactionsUsed
       : 0,
-    businessAccountsRemaining: subscription
+    businessAccountsRemaining: hasValidSubscription
       ? subscription.businessAccountsLimit === -1
         ? Infinity
         : subscription.businessAccountsLimit - subscription.businessAccountsUsed
       : 0,
-    subscription,
+    subscription: hasValidSubscription ? subscription : null,
   };
 };
