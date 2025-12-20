@@ -257,14 +257,14 @@ async function makeDecision(state: AgentState): Promise<Partial<AgentState>> {
 INVOICE DETAILS:
 - Invoice Number: ${invoice.invoiceNumber}
 - Client: ${clientName} <${clientEmail}>
-- Amount: ${invoice.total.toNumber().toFixed(2)} ${invoice.businessId.includes("PKR") ? "PKR" : "USD"}
+- Amount: Rs ${invoice.total.toNumber().toFixed(2)} PKR
 - Issue Date: ${formatDate(invoice.issueDate)}
 - Due Date: ${formatDate(invoice.dueDate)}
 - Days Overdue: ${daysOverdue} days
 - Current Status: ${invoice.status}
 - Follow-ups Sent: ${invoice.followUpCount}
 - Current Escalation: ${invoice.escalationLevel || "NONE"}
-- Paid Amount: ${invoice.paidAmount.toNumber().toFixed(2)}
+- Paid Amount: Rs ${invoice.paidAmount.toNumber().toFixed(2)} PKR
 
 CLIENT PAYMENT HISTORY:
 - Total Invoices: ${history.totalInvoices}
@@ -273,7 +273,7 @@ CLIENT PAYMENT HISTORY:
 - Average Days to Payment: ${history.avgDaysToPayment}
 - Reliability Score: ${(history.reliabilityScore * 100).toFixed(0)}%
 - Current Overdue Invoices: ${history.currentOverdueCount}
-- Current Overdue Amount: ${history.currentOverdueAmount.toFixed(2)}
+- Current Overdue Amount: Rs ${history.currentOverdueAmount.toFixed(2)} PKR
 
 PREVIOUS ACTIONS:
 ${invoice.collectionActions && invoice.collectionActions.length > 0
@@ -295,7 +295,7 @@ ESCALATION RULES:
 SPECIAL CONSIDERATIONS:
 - If client has 80%+ reliability and this is first time late: Be extra gentle
 - If client has <50% reliability: Be firmer earlier
-- If amount > 5000 and overdue 7+ days: Consider payment plan
+- If amount > Rs 1,400,000 PKR and overdue 7+ days: Consider payment plan
 - If no response after 3 follow-ups: Escalate or flag for manual review
 - If client has active payment plan: Don't send collection emails
 
@@ -312,7 +312,7 @@ Respond with ONLY valid JSON (no markdown, no code blocks):
   "reasoning": "Clear explanation in 2-3 sentences",
   "escalationLevel": "FRIENDLY_REMINDER",
   "emailSubject": "Compelling subject line",
-  "emailBody": "Professional email body (3-4 paragraphs, use client name ${clientName}, be appropriate for escalation level)",
+  "emailBody": "Professional email body (3-4 paragraphs, use client name ${clientName}, be appropriate for escalation level, mention amounts in PKR currency)",
   "waitDays": 3
 }
 
@@ -321,7 +321,8 @@ IMPORTANT:
 - Tone must match escalation level
 - Be professional but empathetic
 - Include clear call-to-action
-- Mention specific invoice number and amount`;
+- Mention specific invoice number and amount in PKR
+- All monetary amounts should be displayed as PKR (e.g., Rs 1,234.56 PKR)`;
 
   try {
     const response = await model.invoke(prompt);
@@ -435,7 +436,7 @@ async function sendReminderEmail(state: AgentState): Promise<Partial<AgentState>
     invoice: {
       number: invoice.invoiceNumber,
       amount: invoice.total.toNumber(),
-      currency: "USD",
+      currency: "PKR",
       dueDate: invoice.dueDate,
       clientName,
     },
@@ -549,7 +550,7 @@ This offer is available for the next 7 days.`;
     invoice: {
       number: invoice.invoiceNumber,
       amount: invoice.total.toNumber(),
-      currency: "USD",
+      currency: "PKR",
       dueDate: invoice.dueDate,
       clientName,
     },
