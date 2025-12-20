@@ -177,19 +177,26 @@ export const DynamicNavigation = ({
         }}
       ></div>
 
-      <ul className="flex justify-between items-center gap-4 py-2 relative z-10">
+      <ul
+        className={cn(
+          "flex items-center justify-start sm:justify-between gap-1 sm:gap-4 py-1.5 sm:py-2 relative z-10",
+          "overflow-x-auto overscroll-x-contain",
+          "px-1",
+          "[-ms-overflow-style:none] [scrollbar-width:none]"
+        )}
+      >
         {links.map((link) => (
           <li
             key={link.id}
-            className="flex-1 rounded-full mx-1 lg:mx-2 px-4"
+            className="flex-none sm:flex-1 rounded-full mx-0.5 sm:mx-1 lg:mx-2 px-1.5 sm:px-4"
             id={`nav-item-${link.id}`}
           >
             <a
               href={link.href}
               className={cn(
-                `flex gap-1 items-center justify-center h-8 md:h-8 text-xs md:text-sm 
+                `flex gap-1 items-center justify-center h-8 text-xs md:text-sm 
                 rounded-full font-medium transition-all duration-300 hover:scale-105 
-                relative overflow-hidden`,
+                relative overflow-hidden px-2 sm:px-0 whitespace-nowrap`,
                 defaultThemeStyles.text,
                 active === link.id && "font-semibold"
               )}
@@ -224,6 +231,9 @@ export const DynamicNavigation = ({
         }
         .animate-ripple {
           animation: ripple 0.6s linear;
+        }
+        nav ul::-webkit-scrollbar {
+          display: none;
         }
 `,
         }}

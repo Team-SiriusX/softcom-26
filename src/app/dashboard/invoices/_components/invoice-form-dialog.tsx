@@ -76,6 +76,7 @@ interface InvoiceFormDialogProps {
   onOpenChange: (open: boolean) => void;
   clients: any[];
   invoice?: any;
+  mode?: "create" | "edit" | "view";
 }
 
 export function InvoiceFormDialog({
@@ -83,6 +84,7 @@ export function InvoiceFormDialog({
   onOpenChange,
   clients,
   invoice,
+  mode = "create",
 }: InvoiceFormDialogProps) {
   const { selectedBusinessId } = useSelectedBusiness();
   const createMutation = useCreateInvoice();
@@ -182,10 +184,12 @@ export function InvoiceFormDialog({
       <DialogContent className="w-[95vw] max-w-4xl max-h-[95vh] overflow-y-auto flex flex-col gap-0 p-0">
         <DialogHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-4 border-b">
           <DialogTitle className="text-lg sm:text-xl">
-            {invoice ? "Edit Invoice" : "Create Invoice"}
+            {mode === "view" ? "View Invoice" : invoice ? "Edit Invoice" : "Create Invoice"}
           </DialogTitle>
           <DialogDescription className="text-sm">
-            {invoice
+            {mode === "view"
+              ? "Invoice details and line items"
+              : invoice
               ? "Update invoice details and line items"
               : "Create a new invoice for your client"}
           </DialogDescription>
@@ -196,7 +200,7 @@ export function InvoiceFormDialog({
             onSubmit={form.handleSubmit(onSubmit)}
             className="flex flex-col h-full"
           >
-            <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 space-y-4 sm:space-y-6">
+            <fieldset disabled={mode === "view"} className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 space-y-4 sm:space-y-6">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
@@ -207,6 +211,7 @@ export function InvoiceFormDialog({
                       <Select
                         onValueChange={field.onChange}
                         defaultValue={field.value}
+                        disabled={mode === "view"}
                       >
                         <FormControl>
                           <SelectTrigger className="w-full">
@@ -561,7 +566,7 @@ export function InvoiceFormDialog({
                   </FormItem>
                 )}
               />
-            </div>
+            </fieldset>
 
             <div className="px-4 sm:px-6 py-4 border-t bg-background">
               <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
@@ -571,17 +576,19 @@ export function InvoiceFormDialog({
                   onClick={() => onOpenChange(false)}
                   className="w-full sm:w-auto"
                 >
-                  Cancel
+                  {mode === "view" ? "Close" : "Cancel"}
                 </Button>
-                <Button
-                  type="submit"
-                  disabled={
-                    createMutation.isPending || updateMutation.isPending
-                  }
-                  className="w-full sm:w-auto"
-                >
-                  {invoice ? "Update" : "Create"} Invoice
-                </Button>
+                {mode !== "view" && (
+                  <Button
+                    type="submit"
+                    disabled={
+                      createMutation.isPending || updateMutation.isPending
+                    }
+                    className="w-full sm:w-auto"
+                  >
+                    {invoice ? "Update" : "Create"} Invoice
+                  </Button>
+                )}
               </div>
             </div>
           </form>

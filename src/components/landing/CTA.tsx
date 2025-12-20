@@ -33,35 +33,35 @@ export default function CTA() {
   return (
     <section
       ref={containerRef}
-      className="relative flex w-full items-center justify-center bg-white py-32 px-4"
+      className="relative flex w-full items-center justify-center bg-white py-16 md:py-32 px-4"
     >
       <div
         ref={cardRef}
-        className="relative w-full max-w-5xl overflow-hidden rounded-3xl border border-neutral-200 bg-neutral-50 p-12 text-center shadow-2xl md:p-24"
+        className="relative w-full max-w-5xl overflow-hidden rounded-2xl md:rounded-3xl border border-neutral-200 bg-neutral-50 p-8 sm:p-12 md:p-16 lg:p-24 text-center shadow-2xl"
       >
         {/* Glow Effect */}
-        <div className="absolute -top-1/2 left-1/2 h-[500px] w-[500px] -translate-x-1/2 rounded-full bg-[#22D3EE]/20 blur-[100px]" />
+        <div className="absolute -top-1/2 left-1/2 h-[300px] md:h-[500px] w-[300px] md:w-[500px] -translate-x-1/2 rounded-full bg-[#22D3EE]/20 blur-[80px] md:blur-[100px]" />
 
-        <div className="relative z-10 space-y-8">
-          <h2 className="text-4xl font-bold text-neutral-900 md:text-6xl">
+        <div className="relative z-10 space-y-4 md:space-y-8">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-neutral-900">
             Ready to Shape the Future?
           </h2>
-          <p className="mx-auto max-w-2xl text-lg text-neutral-500">
+          <p className="mx-auto max-w-2xl text-base md:text-lg text-neutral-500">
             Join thousands of forward-thinking individuals and businesses who are
             already experiencing the next generation of financial technology.
           </p>
           
-          <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
+          <div className="flex flex-col items-center justify-center gap-4 w-full sm:w-auto">
             <Button
               size="lg"
-              className="h-14 min-w-[200px] bg-[#22D3EE] text-lg font-semibold text-white hover:bg-[#22D3EE]/90 shadow-lg shadow-[#22D3EE]/30"
+              className="h-12 md:h-14 w-full sm:w-auto sm:min-w-[200px] bg-[#22D3EE] text-base md:text-lg font-semibold text-white hover:bg-[#22D3EE]/90 shadow-lg shadow-[#22D3EE]/30"
             >
               Get Started Now
-              <ArrowRight className="ml-2 h-5 w-5" />
+              <ArrowRight className="ml-2 h-4 md:h-5 w-4 md:w-5" />
             </Button>
           </div>
           
-          <p className="text-sm text-neutral-400">
+          <p className="text-xs md:text-sm text-neutral-400">
             No credit card required for demo.
           </p>
         </div>

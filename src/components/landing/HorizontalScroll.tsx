@@ -92,7 +92,7 @@ export default function HorizontalScroll() {
   );
 
   return (
-    <section id="process" ref={triggerRef} className="relative overflow-hidden bg-white min-h-screen">
+    <section id="process" ref={triggerRef} className="relative overflow-hidden bg-white min-h-screen md:min-h-screen">
       {/* Background Blur */}
       <div className="absolute inset-0 z-0 pointer-events-none">
         <div className="absolute left-0 top-0 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#22D3EE]/5 blur-[100px]" />
@@ -105,16 +105,16 @@ export default function HorizontalScroll() {
         style={{ width: `${(cards.length + 1) * 100}vw` }}
       >
         {/* Intro Slide */}
-        <div className="flex h-full w-screen flex-shrink-0 flex-col justify-center px-12 md:px-24">
-          <h2 className="text-6xl font-black uppercase tracking-tighter text-neutral-900 md:text-9xl">
+        <div className="flex h-full w-screen flex-shrink-0 flex-col justify-center px-6 sm:px-12 md:px-24">
+          <h2 className="text-4xl sm:text-6xl md:text-7xl lg:text-9xl font-black uppercase tracking-tighter text-neutral-900">
             The <span className="text-[#22D3EE]">Process</span>
           </h2>
-          <p className="mt-8 max-w-xl text-xl text-neutral-500">
+          <p className="mt-4 md:mt-8 max-w-xl text-base md:text-xl text-neutral-500">
             Scroll to explore how we transform the financial landscape.
           </p>
-          <div className="mt-8 flex items-center gap-2 text-[#22D3EE]">
-            <span className="text-sm font-bold uppercase tracking-widest">Scroll Right</span>
-            <ArrowRight className="animate-pulse" />
+          <div className="mt-4 md:mt-8 flex items-center gap-2 text-[#22D3EE]">
+            <span className="text-xs md:text-sm font-bold uppercase tracking-widest">Scroll Right</span>
+            <ArrowRight className="animate-pulse h-4 md:h-5 w-4 md:w-5" />
           </div>
         </div>
 
@@ -122,20 +122,20 @@ export default function HorizontalScroll() {
         {cards.map((card) => (
           <div
             key={card.id}
-            className="horizontal-card flex h-full w-screen flex-shrink-0 items-center justify-center px-8"
+            className="horizontal-card flex h-full w-screen flex-shrink-0 items-center justify-center px-4 sm:px-6 md:px-8"
           >
-            <div className="card-inner group relative flex h-[60vh] w-full max-w-4xl flex-col justify-between overflow-hidden rounded-[3rem] bg-neutral-50 p-12 transition-all duration-500 hover:bg-[#22D3EE] hover:shadow-2xl hover:shadow-[#22D3EE]/30 md:p-24 border border-neutral-100">
-              <div className="absolute -right-20 -top-20 h-96 w-96 rounded-full bg-[#22D3EE]/10 blur-3xl transition-all duration-500 group-hover:bg-white/20" />
+            <div className="card-inner group relative flex h-[70vh] sm:h-[60vh] w-full max-w-4xl flex-col justify-between overflow-hidden rounded-3xl md:rounded-[3rem] bg-neutral-50 p-6 sm:p-12 md:p-16 lg:p-24 transition-all duration-500 hover:bg-[#22D3EE] hover:shadow-2xl hover:shadow-[#22D3EE]/30 border border-neutral-100">
+              <div className="absolute -right-10 md:-right-20 -top-10 md:-top-20 h-48 md:h-96 w-48 md:w-96 rounded-full bg-[#22D3EE]/10 blur-2xl md:blur-3xl transition-all duration-500 group-hover:bg-white/20" />
               
-              <span className="font-mono text-8xl font-bold text-neutral-200 transition-colors duration-300 group-hover:text-white/40">
+              <span className="font-mono text-5xl sm:text-6xl md:text-8xl font-bold text-neutral-200 transition-colors duration-300 group-hover:text-white/40">
                 {card.id}
               </span>
 
               <div className="relative z-10">
-                <h3 className="text-4xl font-bold text-neutral-900 transition-colors duration-300 group-hover:text-white md:text-6xl">
+                <h3 className="text-2xl sm:text-3xl md:text-4xl lg:text-6xl font-bold text-neutral-900 transition-colors duration-300 group-hover:text-white">
                   {card.title}
                 </h3>
-                <p className="mt-6 max-w-2xl text-xl text-neutral-500 transition-colors duration-300 group-hover:text-white/90">
+                <p className="mt-3 md:mt-6 max-w-2xl text-base sm:text-lg md:text-xl text-neutral-500 transition-colors duration-300 group-hover:text-white/90">
                   {card.description}
                 </p>
               </div>

@@ -31,33 +31,33 @@ export default function Features() {
   );
 
   return (
-    <section id="features" ref={containerRef} className="bg-white py-32 px-6">
+    <section id="features" ref={containerRef} className="bg-white py-16 md:py-32 px-4 md:px-6">
       <div className="mx-auto max-w-7xl">
-        <div className="mb-20 max-w-2xl">
-          <h2 className="text-5xl font-bold tracking-tight text-neutral-950 md:text-7xl">
+        <div className="mb-12 md:mb-20 max-w-2xl">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold tracking-tight text-neutral-950">
             Everything you need. <br />
             <span className="text-[#22D3EE]">Nothing you don't.</span>
           </h2>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-3 md:grid-rows-2 h-[1200px] md:h-[800px]">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3 md:grid-rows-2 auto-rows-auto md:h-[800px]">
           {/* Large Card 1 */}
-          <div className="bento-card group relative col-span-1 row-span-1 md:col-span-2 md:row-span-2 overflow-hidden rounded-[2rem] bg-neutral-50 p-10 transition-all hover:bg-neutral-100">
-            <div className="absolute right-0 top-0 h-64 w-64 rounded-full bg-[#22D3EE]/10 blur-3xl transition-all group-hover:bg-[#22D3EE]/20" />
-            <Globe className="mb-8 h-12 w-12 text-[#22D3EE]" />
-            <h3 className="text-4xl font-bold text-neutral-900">Global Network</h3>
-            <p className="mt-4 max-w-md text-lg text-neutral-500">
+          <div className="bento-card group relative col-span-1 row-span-1 md:col-span-2 md:row-span-2 overflow-hidden rounded-3xl md:rounded-[2rem] bg-neutral-50 p-6 md:p-10 min-h-[300px] md:min-h-0 transition-all hover:bg-neutral-100">
+            <div className="absolute right-0 top-0 h-40 md:h-64 w-40 md:w-64 rounded-full bg-[#22D3EE]/10 blur-2xl md:blur-3xl transition-all group-hover:bg-[#22D3EE]/20" />
+            <Globe className="mb-4 md:mb-8 h-10 md:h-12 w-10 md:w-12 text-[#22D3EE]" />
+            <h3 className="text-2xl md:text-4xl font-bold text-neutral-900">Global Network</h3>
+            <p className="mt-3 md:mt-4 max-w-md text-base md:text-lg text-neutral-500">
               Access markets in over 150 countries with real-time currency conversion and local settlement.
             </p>
             <div className="absolute bottom-0 right-0 h-1/2 w-full translate-y-10 bg-gradient-to-t from-white to-transparent opacity-50" />
           </div>
 
           {/* Tall Card */}
-          <div className="bento-card group relative col-span-1 row-span-1 md:row-span-2 overflow-hidden rounded-[2rem] bg-neutral-950 p-10 text-white transition-all hover:scale-[1.02]">
-            <div className="absolute -left-10 -top-10 h-40 w-40 rounded-full bg-[#22D3EE] blur-[80px]" />
-            <Shield className="mb-8 h-12 w-12 text-[#22D3EE]" />
-            <h3 className="text-3xl font-bold">Vault Security</h3>
-            <p className="mt-4 text-neutral-400">
+          <div className="bento-card group relative col-span-1 row-span-1 md:row-span-2 overflow-hidden rounded-3xl md:rounded-[2rem] bg-neutral-950 p-6 md:p-10 min-h-[300px] md:min-h-0 text-white transition-all hover:scale-[1.02]">
+            <div className="absolute -left-10 -top-10 h-32 md:h-40 w-32 md:w-40 rounded-full bg-[#22D3EE] blur-[60px] md:blur-[80px]" />
+            <Shield className="mb-4 md:mb-8 h-10 md:h-12 w-10 md:w-12 text-[#22D3EE]" />
+            <h3 className="text-2xl md:text-3xl font-bold">Vault Security</h3>
+            <p className="mt-3 md:mt-4 text-sm md:text-base text-neutral-400">
               Military-grade encryption for every transaction. Your assets are insured up to $1M.
             </p>
             <div className="mt-12 flex flex-col gap-4">
@@ -71,14 +71,14 @@ export default function Features() {
           </div>
 
           {/* Wide Card */}
-          <div className="bento-card group relative col-span-1 md:col-span-2 overflow-hidden rounded-[2rem] border border-neutral-200 bg-white p-10 transition-all hover:border-[#22D3EE]">
+          <div className="bento-card group relative col-span-1 md:col-span-2 overflow-hidden rounded-3xl md:rounded-[2rem] border border-neutral-200 bg-white p-6 md:p-10 min-h-[200px] md:min-h-0 transition-all hover:border-[#22D3EE]">
             <div className="flex items-start justify-between">
               <div>
-                <Zap className="mb-6 h-10 w-10 text-[#22D3EE]" />
-                <h3 className="text-2xl font-bold text-neutral-900">Instant Settlement</h3>
-                <p className="mt-2 text-neutral-500">Funds arrive in seconds.</p>
+                <Zap className="mb-4 md:mb-6 h-8 md:h-10 w-8 md:w-10 text-[#22D3EE]" />
+                <h3 className="text-xl md:text-2xl font-bold text-neutral-900">Instant Settlement</h3>
+                <p className="mt-2 text-sm md:text-base text-neutral-500">Funds arrive in seconds.</p>
               </div>
-              <div className="text-5xl font-black text-neutral-100 group-hover:text-[#22D3EE]/20">0.1s</div>
+              <div className="text-3xl md:text-5xl font-black text-neutral-100 group-hover:text-[#22D3EE]/20">0.1s</div>
             </div>
           </div>
         </div>

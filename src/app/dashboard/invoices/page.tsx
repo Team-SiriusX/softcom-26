@@ -55,6 +55,8 @@ export default function InvoicesPage() {
   const [isClientDialogOpen, setIsClientDialogOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
+  const [isEditMode, setIsEditMode] = useState(false);
 
   const { data: invoicesData, isLoading } = useGetInvoices(
     selectedBusinessId || undefined,
@@ -72,6 +74,26 @@ export default function InvoicesPage() {
     if (deleteId) {
       deleteMutation.mutate(deleteId);
       setDeleteId(null);
+    }
+  };
+
+  const handleEdit = (invoice: any) => {
+    setSelectedInvoice(invoice);
+    setIsEditMode(true);
+    setIsCreateOpen(true);
+  };
+
+  const handleView = (invoice: any) => {
+    setSelectedInvoice(invoice);
+    setIsEditMode(false);
+    setIsCreateOpen(true);
+  };
+
+  const handleDialogClose = (open: boolean) => {
+    setIsCreateOpen(open);
+    if (!open) {
+      setSelectedInvoice(null);
+      setIsEditMode(false);
     }
   };
 
@@ -256,10 +278,18 @@ export default function InvoicesPage() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex gap-2 justify-end">
-                          <Button variant="ghost" size="icon">
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            onClick={() => handleView(invoice)}
+                          >
                             <Eye className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="icon">
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            onClick={() => handleEdit(invoice)}
+                          >
                             <Edit className="h-4 w-4" />
                           </Button>
                           <Button
@@ -282,8 +312,10 @@ export default function InvoicesPage() {
 
       <InvoiceFormDialog
         open={isCreateOpen}
-        onOpenChange={setIsCreateOpen}
+        onOpenChange={handleDialogClose}
         clients={clients}
+        invoice={selectedInvoice}
+        mode={selectedInvoice ? (isEditMode ? "edit" : "view") : "create"}
       />
 
       <ClientFormDialog

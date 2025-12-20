@@ -46,7 +46,7 @@ export default function LandingPage() {
   }, []);
 
   const { data: session } = useSession();
-[,]
+
   const navLinks = [
     { id: "home", label: "Home", href: "#home", icon: <Home size={16} /> },
     {
@@ -79,26 +79,27 @@ export default function LandingPage() {
   return (
     <main className="flex min-h-screen flex-col bg-white text-neutral-900 selection:bg-[#22D3EE] selection:text-white relative">
       {/* Navigation */}
-      <div className="fixed top-6 left-1/2 z-50 -translate-x-1/2 flex items-center gap-3">
-        <DynamicNavigation
-          links={navLinks}
-          backgroundColor="rgba(255, 255, 255, 0.8)"
-          highlightColor="rgba(34, 211, 238, 0.15)"
-          textColor="#171717"
-          glowIntensity={0}
-          className="border-neutral-200/50"
-        />
+      <div className="fixed top-4 md:top-6 left-1/2 z-50 -translate-x-1/2 w-[calc(100%-2rem)] max-w-5xl px-0">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+          <DynamicNavigation
+            links={navLinks}
+            backgroundColor="rgba(255, 255, 255, 0.8)"
+            highlightColor="rgba(34, 211, 238, 0.15)"
+            textColor="#171717"
+            glowIntensity={0}
+            className="border-neutral-200/50 w-full sm:w-auto"
+          />
 
-        {/* Auth Buttons */}
-        <div className="flex items-center gap-2">
+          {/* Auth Buttons */}
+          <div className="flex items-center gap-2 justify-end sm:justify-start">
           {session ? (
             <Link href="/dashboard">
               <Button
                 size="sm"
-                className="h-10 rounded-full bg-neutral-950 px-5 text-sm font-semibold text-white hover:bg-neutral-800"
+                className="h-9 md:h-10 rounded-full bg-neutral-950 px-3 md:px-5 text-xs md:text-sm font-semibold text-white hover:bg-neutral-800"
               >
-                <LayoutDashboard size={16} className="mr-2" />
-                Dashboard
+                <LayoutDashboard size={16} className="md:mr-2" />
+                <span className="hidden md:inline">Dashboard</span>
               </Button>
             </Link>
           ) : (
@@ -107,7 +108,7 @@ export default function LandingPage() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-10 rounded-full px-5 text-sm font-medium text-neutral-700 hover:bg-neutral-100"
+                  className="h-9 md:h-10 rounded-full px-3 md:px-5 text-xs md:text-sm font-medium text-neutral-700 hover:bg-neutral-100"
                 >
                   Sign In
                 </Button>
@@ -115,13 +116,14 @@ export default function LandingPage() {
               <Link href="/auth/sign-up">
                 <Button
                   size="sm"
-                  className="h-10 rounded-full bg-[#22D3EE] px-5 text-sm font-semibold text-white shadow-lg shadow-[#22D3EE]/30 hover:bg-[#06B6D4]"
+                  className="h-9 md:h-10 rounded-full bg-[#22D3EE] px-3 md:px-5 text-xs md:text-sm font-semibold text-white shadow-lg shadow-[#22D3EE]/30 hover:bg-[#06B6D4]"
                 >
                   Get Started
                 </Button>
               </Link>
             </>
           )}
+          </div>
         </div>
       </div>
       <Hero />

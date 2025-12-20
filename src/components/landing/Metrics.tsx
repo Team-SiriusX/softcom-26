@@ -60,21 +60,21 @@ export default function Metrics() {
     <section
       id="metrics"
       ref={containerRef}
-      className="relative w-full border-y border-neutral-100 bg-white py-32"
+      className="relative w-full border-y border-neutral-100 bg-white py-16 md:py-32"
     >
       <div className="mx-auto max-w-7xl px-4">
-        <div className="grid grid-cols-2 gap-12 md:grid-cols-4">
+        <div className="grid grid-cols-2 gap-6 md:gap-12 md:grid-cols-4">
           {metrics.map((metric, index) => (
             <div
               key={index}
               className="metric-item flex flex-col items-center text-center"
               data-value={metric.value}
             >
-              <div className="mb-2 flex items-baseline text-5xl font-bold text-neutral-900 md:text-6xl">
+              <div className="mb-2 flex items-baseline text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-neutral-900">
                 <span className="metric-value">0</span>
                 <span className="text-[#22D3EE]">{metric.suffix}</span>
               </div>
-              <p className="text-sm font-medium uppercase tracking-wider text-neutral-500">
+              <p className="text-xs md:text-sm font-medium uppercase tracking-wider text-neutral-500">
                 {metric.label}
               </p>
             </div>

@@ -40,8 +40,16 @@ import {
   AlertCircle,
   CheckCircle2,
   XCircle,
+  ChevronDown,
+  ChevronUp,
+  Send,
+  Calendar,
+  MessageSquare,
+  Eye,
+  MousePointer,
+  MailOpen,
 } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow, format } from "date-fns";
 import { useState } from "react";
 
 export default function CollectorPage() {
@@ -194,11 +202,12 @@ export default function CollectorPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Status</TableHead>
+                  <TableHead>Type</TableHead>
                   <TableHead>Started</TableHead>
                   <TableHead>Duration</TableHead>
                   <TableHead>Invoices</TableHead>
-                  <TableHead>Emails Sent</TableHead>
                   <TableHead>Actions</TableHead>
+                  <TableHead>Emails</TableHead>
                   <TableHead>Errors</TableHead>
                   <TableHead></TableHead>
                 </TableRow>
@@ -211,22 +220,29 @@ export default function CollectorPage() {
                     onClick={() => setSelectedExecutionId(execution.id)}
                   >
                     <TableCell>
-                      {execution.status === "SUCCESS" ? (
-                        <Badge className="bg-green-500">
+                      {execution.status === "COMPLETED" ? (
+                        <Badge className="bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/20">
                           <CheckCircle2 className="mr-1 h-3 w-3" />
-                          Success
+                          Completed
                         </Badge>
-                      ) : execution.status === "PARTIAL" ? (
-                        <Badge variant="secondary">
-                          <AlertCircle className="mr-1 h-3 w-3" />
-                          Partial
+                      ) : execution.status === "RUNNING" ? (
+                        <Badge className="bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20">
+                          <Clock className="mr-1 h-3 w-3 animate-pulse" />
+                          Running
                         </Badge>
-                      ) : (
+                      ) : execution.status === "FAILED" ? (
                         <Badge variant="destructive">
                           <XCircle className="mr-1 h-3 w-3" />
                           Failed
                         </Badge>
+                      ) : (
+                        <Badge variant="outline">{execution.status}</Badge>
                       )}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className="capitalize">
+                        {execution.executionType?.toLowerCase() || "Manual"}
+                      </Badge>
                     </TableCell>
                     <TableCell>
                       {formatDistanceToNow(new Date(execution.startedAt), {
@@ -242,9 +258,9 @@ export default function CollectorPage() {
                           )}s`
                         : "N/A"}
                     </TableCell>
-                    <TableCell>{execution.invoicesProcessed}</TableCell>
-                    <TableCell>{execution.emailsSent}</TableCell>
-                    <TableCell>{execution.actionsTaken}</TableCell>
+                    <TableCell>{execution.invoicesProcessed || 0}</TableCell>
+                    <TableCell>{execution.actionsCreated || 0}</TableCell>
+                    <TableCell>{execution.emailsSent || 0}</TableCell>
                     <TableCell>
                       {execution.errors > 0 ? (
                         <Badge variant="destructive">{execution.errors}</Badge>
@@ -287,15 +303,73 @@ export default function CollectorPage() {
 function CollectionActionsDetail({ executionId }: { executionId: string }) {
   const { selectedBusinessId } = useSelectedBusiness();
   const { data, isLoading } = useCollectorActions(selectedBusinessId ?? undefined, executionId);
+  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
 
   const actions = data?.actions || [];
+
+  const toggleRow = (actionId: string) => {
+    const newExpanded = new Set(expandedRows);
+    if (newExpanded.has(actionId)) {
+      newExpanded.delete(actionId);
+    } else {
+      newExpanded.add(actionId);
+    }
+    setExpandedRows(newExpanded);
+  };
+
+  const getStatusBadge = (status: string) => {
+    const statusMap: Record<string, { color: string; icon: any; label: string }> = {
+      PENDING: { color: "bg-gray-500/10 text-gray-700 dark:text-gray-400 border-gray-500/20", icon: Clock, label: "Pending" },
+      SCHEDULED: { color: "bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20", icon: Calendar, label: "Scheduled" },
+      SENT: { color: "bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 border-indigo-500/20", icon: Send, label: "Sent" },
+      DELIVERED: { color: "bg-cyan-500/10 text-cyan-700 dark:text-cyan-400 border-cyan-500/20", icon: Mail, label: "Delivered" },
+      OPENED: { color: "bg-purple-500/10 text-purple-700 dark:text-purple-400 border-purple-500/20", icon: MailOpen, label: "Opened" },
+      CLICKED: { color: "bg-violet-500/10 text-violet-700 dark:text-violet-400 border-violet-500/20", icon: MousePointer, label: "Clicked" },
+      REPLIED: { color: "bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20", icon: MessageSquare, label: "Replied" },
+      COMPLETED: { color: "bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/20", icon: CheckCircle2, label: "Completed" },
+      FAILED: { color: "bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/20", icon: XCircle, label: "Failed" },
+      CANCELLED: { color: "bg-gray-500/10 text-gray-700 dark:text-gray-400 border-gray-500/20", icon: XCircle, label: "Cancelled" },
+    };
+
+    const config = statusMap[status] || statusMap.PENDING;
+    const Icon = config.icon;
+
+    return (
+      <Badge variant="outline" className={config.color}>
+        <Icon className="mr-1 h-3 w-3" />
+        {config.label}
+      </Badge>
+    );
+  };
+
+  const getActionTypeBadge = (actionType: string) => {
+    const typeMap: Record<string, { color: string; label: string }> = {
+      SEND_INVOICE: { color: "bg-blue-500/10 text-blue-700 dark:text-blue-400", label: "Send Invoice" },
+      FRIENDLY_REMINDER: { color: "bg-green-500/10 text-green-700 dark:text-green-400", label: "Friendly Reminder" },
+      FIRM_REMINDER: { color: "bg-yellow-500/10 text-yellow-700 dark:text-yellow-400", label: "Firm Reminder" },
+      URGENT_NOTICE: { color: "bg-orange-500/10 text-orange-700 dark:text-orange-400", label: "Urgent Notice" },
+      FINAL_NOTICE: { color: "bg-red-500/10 text-red-700 dark:text-red-400", label: "Final Notice" },
+      LEGAL_WARNING: { color: "bg-red-600/10 text-red-700 dark:text-red-400", label: "Legal Warning" },
+      PAYMENT_PLAN_OFFER: { color: "bg-purple-500/10 text-purple-700 dark:text-purple-400", label: "Payment Plan" },
+      THANK_YOU: { color: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400", label: "Thank You" },
+      MANUAL_REVIEW: { color: "bg-gray-500/10 text-gray-700 dark:text-gray-400", label: "Manual Review" },
+    };
+
+    const config = typeMap[actionType] || { color: "bg-gray-500/10 text-gray-700", label: actionType };
+
+    return (
+      <Badge variant="outline" className={config.color}>
+        {config.label}
+      </Badge>
+    );
+  };
 
   return (
     <Card>
       <CardHeader>
         <CardTitle>Collection Actions Detail</CardTitle>
         <CardDescription>
-          Individual actions taken during this execution
+          Individual actions taken during execution #{executionId.slice(-8)}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -311,56 +385,184 @@ function CollectionActionsDetail({ executionId }: { executionId: string }) {
             <AlertDescription>No actions found for this execution.</AlertDescription>
           </Alert>
         ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Action Type</TableHead>
-                <TableHead>Invoice</TableHead>
-                <TableHead>Client</TableHead>
-                <TableHead>Amount</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Email Sent</TableHead>
-                <TableHead>Created</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {actions.map((action: any) => (
-                <TableRow key={action.id}>
-                  <TableCell>
-                    <Badge variant="outline">{action.actionType}</Badge>
-                  </TableCell>
-                  <TableCell className="font-mono text-sm">
-                    {action.invoice?.invoiceNumber || "N/A"}
-                  </TableCell>
-                  <TableCell>{action.invoice?.client?.name || "Unknown"}</TableCell>
-                  <TableCell>
-                    ${action.invoice?.totalAmount?.toLocaleString() || "0"}
-                  </TableCell>
-                  <TableCell>
-                    {action.status === "COMPLETED" ? (
-                      <Badge className="bg-green-500">Completed</Badge>
-                    ) : action.status === "FAILED" ? (
-                      <Badge variant="destructive">Failed</Badge>
-                    ) : (
-                      <Badge variant="secondary">{action.status}</Badge>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {action.emailSent ? (
-                      <CheckCircle2 className="h-4 w-4 text-green-500" />
-                    ) : (
-                      <XCircle className="h-4 w-4 text-muted-foreground" />
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {formatDistanceToNow(new Date(action.createdAt), {
-                      addSuffix: true,
-                    })}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          <div className="space-y-2">
+            {actions.map((action: any) => {
+              const isExpanded = expandedRows.has(action.id);
+              return (
+                <div key={action.id} className="border rounded-lg overflow-hidden">
+                  <div
+                    className="p-4 hover:bg-muted/50 cursor-pointer transition-colors"
+                    onClick={() => toggleRow(action.id)}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4 flex-1">
+                        <div className="flex flex-col gap-2">
+                          {getActionTypeBadge(action.actionType)}
+                          {getStatusBadge(action.status)}
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3">
+                            <span className="font-mono text-sm font-medium">
+                              {action.invoice?.invoiceNumber || "N/A"}
+                            </span>
+                            <span className="text-sm text-muted-foreground">
+                              {action.invoice?.client?.name || "Unknown Client"}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-4 mt-1">
+                            <span className="text-sm text-muted-foreground">
+                              Rs {action.invoice?.total?.toLocaleString() || "0"}
+                            </span>
+                            {action.emailSent && (
+                              <Badge variant="outline" className="bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/20">
+                                <Mail className="mr-1 h-3 w-3" />
+                                Email Sent
+                              </Badge>
+                            )}
+                            {action.sentAt && (
+                              <span className="text-xs text-muted-foreground">
+                                Sent {formatDistanceToNow(new Date(action.sentAt), { addSuffix: true })}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-xs text-muted-foreground">
+                            {formatDistanceToNow(new Date(action.createdAt), { addSuffix: true })}
+                          </div>
+                        </div>
+                      </div>
+                      <Button variant="ghost" size="sm" className="ml-2">
+                        {isExpanded ? (
+                          <ChevronUp className="h-4 w-4" />
+                        ) : (
+                          <ChevronDown className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+
+                  {isExpanded && (
+                    <div className="border-t bg-muted/30 p-4 space-y-4">
+                      {/* AI Reasoning */}
+                      {action.aiReasoning && (
+                        <div>
+                          <h4 className="text-sm font-semibold mb-2 flex items-center gap-2">
+                            <MessageSquare className="h-4 w-4" />
+                            AI Reasoning
+                          </h4>
+                          <div className="bg-background rounded-md p-3 text-sm text-muted-foreground whitespace-pre-wrap">
+                            {action.aiReasoning}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Email Details */}
+                      {action.emailSubject && (
+                        <div>
+                          <h4 className="text-sm font-semibold mb-2 flex items-center gap-2">
+                            <Mail className="h-4 w-4" />
+                            Email Details
+                          </h4>
+                          <div className="bg-background rounded-md p-3 space-y-2">
+                            <div>
+                              <span className="text-xs font-medium text-muted-foreground">Subject:</span>
+                              <p className="text-sm font-medium">{action.emailSubject}</p>
+                            </div>
+                            {action.sentToEmail && (
+                              <div>
+                                <span className="text-xs font-medium text-muted-foreground">To:</span>
+                                <p className="text-sm">{action.sentToEmail}</p>
+                              </div>
+                            )}
+                            {action.emailBody && (
+                              <div>
+                                <span className="text-xs font-medium text-muted-foreground">Preview:</span>
+                                <div className="text-sm text-muted-foreground whitespace-pre-wrap max-h-40 overflow-y-auto mt-1 p-2 bg-muted/50 rounded">
+                                  {action.emailBody.substring(0, 500)}
+                                  {action.emailBody.length > 500 && "..."}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Timeline */}
+                      <div>
+                        <h4 className="text-sm font-semibold mb-2 flex items-center gap-2">
+                          <Clock className="h-4 w-4" />
+                          Timeline
+                        </h4>
+                        <div className="bg-background rounded-md p-3 space-y-1 text-sm">
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Created:</span>
+                            <span>{format(new Date(action.createdAt), "MMM dd, yyyy 'at' HH:mm")}</span>
+                          </div>
+                          {action.scheduledFor && (
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">Scheduled For:</span>
+                              <span>{format(new Date(action.scheduledFor), "MMM dd, yyyy 'at' HH:mm")}</span>
+                            </div>
+                          )}
+                          {action.sentAt && (
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">Sent At:</span>
+                              <span>{format(new Date(action.sentAt), "MMM dd, yyyy 'at' HH:mm")}</span>
+                            </div>
+                          )}
+                          {action.executedAt && (
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">Executed At:</span>
+                              <span>{format(new Date(action.executedAt), "MMM dd, yyyy 'at' HH:mm")}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Error Message */}
+                      {action.errorMessage && (
+                        <div>
+                          <h4 className="text-sm font-semibold mb-2 flex items-center gap-2 text-red-600">
+                            <AlertCircle className="h-4 w-4" />
+                            Error
+                          </h4>
+                          <div className="bg-red-500/10 border border-red-500/20 rounded-md p-3 text-sm text-red-700 dark:text-red-400">
+                            {action.errorMessage}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Result */}
+                      {action.result && (
+                        <div>
+                          <h4 className="text-sm font-semibold mb-2 flex items-center gap-2">
+                            <CheckCircle2 className="h-4 w-4" />
+                            Result
+                          </h4>
+                          <div className="bg-background rounded-md p-3 text-sm text-muted-foreground">
+                            {action.result}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Metadata */}
+                      {action.metadata && Object.keys(action.metadata).length > 0 && (
+                        <div>
+                          <h4 className="text-sm font-semibold mb-2">Additional Information</h4>
+                          <div className="bg-background rounded-md p-3">
+                            <pre className="text-xs text-muted-foreground overflow-x-auto">
+                              {JSON.stringify(action.metadata, null, 2)}
+                            </pre>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         )}
       </CardContent>
     </Card>

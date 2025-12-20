@@ -63,14 +63,14 @@ export function UserNav() {
       <DropdownMenuTrigger asChild>
         <Button
           variant="ghost"
-          className="relative h-10 w-auto gap-2 rounded-full px-2 hover:bg-secondary"
+          className="relative h-8 md:h-10 w-auto gap-1 md:gap-2 rounded-full px-1 md:px-2 hover:bg-secondary"
         >
           <div className="hidden md:flex flex-col items-end text-sm">
             <span className="font-medium">{user.name}</span>
           </div>
-          <Avatar className="h-8 w-8">
+          <Avatar className="h-7 w-7 md:h-8 md:w-8">
             <AvatarImage src={user.image || ""} alt={user.name || ""} />
-            <AvatarFallback>{initials}</AvatarFallback>
+            <AvatarFallback className="text-xs md:text-sm">{initials}</AvatarFallback>
           </Avatar>
         </Button>
       </DropdownMenuTrigger>

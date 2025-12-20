@@ -49,49 +49,49 @@ export default function AISection() {
     <section
       id="ai"
       ref={containerRef}
-      className="relative flex h-screen w-full items-center justify-center bg-white overflow-hidden"
+      className="relative flex min-h-screen md:h-screen w-full items-center justify-center bg-white overflow-hidden py-16 md:py-0"
     >
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-[#22D3EE]/5 via-transparent to-transparent" />
 
-      <div className="grid w-full max-w-6xl grid-cols-1 gap-12 px-4 md:grid-cols-2">
+      <div className="grid w-full max-w-6xl grid-cols-1 gap-8 md:gap-12 px-4 md:grid-cols-2">
         {/* Left: Visuals */}
         <div className="flex flex-col items-center justify-center space-y-8">
           <div className="step-1 flex flex-col items-center text-center">
-            <div className="mb-4 flex h-24 w-24 items-center justify-center rounded-full bg-[#22D3EE]/10 text-[#22D3EE] shadow-xl shadow-[#22D3EE]/20">
-              <Database className="h-10 w-10" />
+            <div className="mb-3 md:mb-4 flex h-16 w-16 md:h-24 md:w-24 items-center justify-center rounded-full bg-[#22D3EE]/10 text-[#22D3EE] shadow-xl shadow-[#22D3EE]/20">
+              <Database className="h-7 w-7 md:h-10 md:w-10" />
             </div>
-            <h3 className="text-2xl font-bold text-neutral-900">Raw Data</h3>
-            <p className="text-neutral-500">Millions of data points processed instantly.</p>
+            <h3 className="text-xl md:text-2xl font-bold text-neutral-900">Raw Data</h3>
+            <p className="text-sm md:text-base text-neutral-500">Millions of data points processed instantly.</p>
           </div>
 
           <div className="line-1 h-0 w-1 bg-[#22D3EE]" />
 
           <div className="step-2 flex flex-col items-center text-center opacity-0">
-            <div className="mb-4 flex h-24 w-24 items-center justify-center rounded-full bg-[#22D3EE]/10 text-[#22D3EE] shadow-xl shadow-[#22D3EE]/20">
-              <Brain className="h-10 w-10" />
+            <div className="mb-3 md:mb-4 flex h-16 w-16 md:h-24 md:w-24 items-center justify-center rounded-full bg-[#22D3EE]/10 text-[#22D3EE] shadow-xl shadow-[#22D3EE]/20">
+              <Brain className="h-7 w-7 md:h-10 md:w-10" />
             </div>
-            <h3 className="text-2xl font-bold text-neutral-900">AI Insight</h3>
-            <p className="text-neutral-500">Patterns detected and analyzed by our core.</p>
+            <h3 className="text-xl md:text-2xl font-bold text-neutral-900">AI Insight</h3>
+            <p className="text-sm md:text-base text-neutral-500">Patterns detected and analyzed by our core.</p>
           </div>
 
           <div className="line-2 h-0 w-1 bg-[#22D3EE]" />
 
           <div className="step-3 flex flex-col items-center text-center opacity-0">
-            <div className="mb-4 flex h-24 w-24 items-center justify-center rounded-full bg-[#22D3EE]/10 text-[#22D3EE] shadow-xl shadow-[#22D3EE]/20">
-              <Zap className="h-10 w-10" />
+            <div className="mb-3 md:mb-4 flex h-16 w-16 md:h-24 md:w-24 items-center justify-center rounded-full bg-[#22D3EE]/10 text-[#22D3EE] shadow-xl shadow-[#22D3EE]/20">
+              <Zap className="h-7 w-7 md:h-10 md:w-10" />
             </div>
-            <h3 className="text-2xl font-bold text-neutral-900">Smart Action</h3>
-            <p className="text-neutral-500">Automated execution for optimal results.</p>
+            <h3 className="text-xl md:text-2xl font-bold text-neutral-900">Smart Action</h3>
+            <p className="text-sm md:text-base text-neutral-500">Automated execution for optimal results.</p>
           </div>
         </div>
 
         {/* Right: Text Context */}
-        <div className="flex flex-col justify-center space-y-6">
-          <h2 className="text-4xl font-bold leading-tight text-neutral-900 md:text-6xl">
+        <div className="flex flex-col justify-center space-y-4 md:space-y-6">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold leading-tight text-neutral-900">
             From Data to <br />
             <span className="text-[#22D3EE]">Decision</span>
           </h2>
-          <p className="text-lg text-neutral-500">
+          <p className="text-base md:text-lg text-neutral-500">
             Our proprietary AI engine transforms raw market data into actionable
             financial strategies in milliseconds. Watch as complexity becomes
             clarity.
