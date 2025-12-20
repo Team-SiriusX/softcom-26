@@ -4,21 +4,26 @@ import * as z from "zod";
 import { db } from "@/lib/db";
 import { currentUser } from "@/lib/current-user";
 import { TIER_LIMITS } from "@/lib/subscription-utils";
+import { getUserBusinesses } from "@/lib/business-access";
 
 const app = new Hono()
-  // Get all businesses for current user
+  // Get all businesses for current user (owned + memberships)
   .get("/", async (c) => {
     const user = await currentUser();
     if (!user) {
       return c.json({ error: "Unauthorized" }, 401);
     }
 
-    const businesses = await db.business.findMany({
-      where: { userId: user.id },
-      orderBy: { createdAt: "desc" },
-    });
+    // Get both owned businesses and memberships
+    const { owned, memberships } = await getUserBusinesses(user.id);
+    
+    // Combine and format for consistent response
+    const allBusinesses = [
+      ...owned.map(b => ({ ...b, role: "OWNER" as const })),
+      ...memberships,
+    ];
 
-    return c.json({ data: businesses });
+    return c.json({ data: allBusinesses });
   })
 
   // Get single business
@@ -29,6 +34,7 @@ const app = new Hono()
       return c.json({ error: "Unauthorized" }, 401);
     }
 
+    // Check if user owns the business
     const business = await db.business.findFirst({
       where: { id, userId: user.id },
       include: {
@@ -42,11 +48,39 @@ const app = new Hono()
       },
     });
 
-    if (!business) {
+    if (business) {
+      return c.json({ data: business });
+    }
+
+    // Check if user is a member of the business
+    const membership = await db.businessMember.findUnique({
+      where: {
+        businessId_userId: {
+          businessId: id,
+          userId: user.id,
+        },
+        status: "ACTIVE",
+      },
+      include: {
+        business: {
+          include: {
+            _count: {
+              select: {
+                transactions: true,
+                ledgerAccounts: true,
+                categories: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!membership) {
       return c.json({ error: "Business not found" }, 404);
     }
 
-    return c.json({ data: business });
+    return c.json({ data: membership.business });
   })
 
   // Create business
