@@ -268,16 +268,41 @@ const app = new Hono()
 
         if (session.mode === "subscription" && session.subscription) {
           const subscriptionId = session.subscription as string;
+          
+          console.log("Retrieving subscription:", subscriptionId);
+          
           const stripeSubscription = await stripe.subscriptions.retrieve(
-            subscriptionId
-          );
+            subscriptionId,
+            { expand: ['latest_invoice'] }
+          ) as Stripe.Subscription;
+          
+          // Get current_period_end from the first subscription item (new Stripe API structure)
+          const subscriptionItem = stripeSubscription.items.data[0];
+          const currentPeriodEndTimestamp = subscriptionItem?.current_period_end;
+          
+          console.log("Retrieved subscription:", {
+            id: stripeSubscription.id,
+            status: stripeSubscription.status,
+            current_period_end: currentPeriodEndTimestamp,
+            items: stripeSubscription.items.data.length
+          });
+          
           const priceId =
-            typeof stripeSubscription.items.data[0].price === "string"
-              ? stripeSubscription.items.data[0].price
-              : stripeSubscription.items.data[0].price.id;
-          const currentPeriodEnd = new Date(
-            (stripeSubscription as any).current_period_end * 1000
-          );
+            typeof subscriptionItem.price === "string"
+              ? subscriptionItem.price
+              : subscriptionItem.price.id;
+          
+          // Extract current period end - Stripe returns unix timestamp
+          const currentPeriodEnd = currentPeriodEndTimestamp 
+            ? new Date(currentPeriodEndTimestamp * 1000)
+            : new Date();
+          
+          console.log("Subscription details:", {
+            subscriptionId,
+            priceId,
+            currentPeriodEnd,
+            rawPeriodEnd: currentPeriodEndTimestamp
+          });
 
           // Determine tier based on price ID
           let tier: "PRO" | "BUSINESS" = "PRO";
@@ -369,11 +394,18 @@ const app = new Hono()
           // This is a subscription payment
           const subscriptionId = (invoice as any).subscription as string;
           const stripeSubscription = await stripe.subscriptions.retrieve(
-            subscriptionId
-          );
-          const currentPeriodEnd = new Date(
-            (stripeSubscription as any).current_period_end * 1000
-          );
+            subscriptionId,
+            { expand: ['latest_invoice'] }
+          ) as Stripe.Subscription;
+          
+          // Get current_period_end from the first subscription item (new Stripe API structure)
+          const subscriptionItem = stripeSubscription.items.data[0];
+          const currentPeriodEndTimestamp = subscriptionItem?.current_period_end;
+          
+          // Extract current period end - Stripe returns unix timestamp
+          const currentPeriodEnd = currentPeriodEndTimestamp 
+            ? new Date(currentPeriodEndTimestamp * 1000)
+            : new Date();
 
           // If userId not in payment intent, try to get it from subscription metadata
           if (!userId) {
@@ -388,9 +420,9 @@ const app = new Hono()
           }
 
           const priceId =
-            typeof stripeSubscription.items.data[0].price === "string"
-              ? stripeSubscription.items.data[0].price
-              : stripeSubscription.items.data[0].price.id;
+            typeof subscriptionItem.price === "string"
+              ? subscriptionItem.price
+              : subscriptionItem.price.id;
 
           // Determine tier based on price ID
           let tier: "PRO" | "BUSINESS" = "PRO";
