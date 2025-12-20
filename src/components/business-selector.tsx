@@ -36,16 +36,9 @@ export function BusinessSelector() {
       value={selectedBusinessId || undefined}
       onValueChange={setSelectedBusinessId}
     >
-<<<<<<< HEAD
-      <SelectTrigger className="w-[140px] sm:w-[180px] md:w-[200px] h-8 md:h-9 text-xs md:text-sm">
-        <Building2 className="mr-1 md:mr-2 h-3.5 w-3.5 md:h-4 md:w-4 shrink-0" />
-        <SelectValue placeholder="Select business" />
-      </SelectTrigger>
-      <SelectContent>
-        {businesses.map((business: any) => (
-          <SelectItem key={business.id} value={business.id} className="text-xs md:text-sm">
-            {business.name}
-=======
+
+      
+
       <SelectTrigger className="w-[200px]">
         <Building2 className="mr-2 h-4 w-4" />
         <SelectValue placeholder="Select business">
@@ -72,7 +65,7 @@ export function BusinessSelector() {
                 </Badge>
               )}
             </div>
->>>>>>> 2a2257841b64b92673a3726aa997d6ad6b6207e1
+
           </SelectItem>
         ))}
       </SelectContent>
