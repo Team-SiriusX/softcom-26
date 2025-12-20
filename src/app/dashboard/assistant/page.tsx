@@ -14,6 +14,8 @@ import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { AlertCircle, Sparkles, TrendingUp } from "lucide-react";
 import Link from "next/link";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 
 export default function AssistantPage() {
   const { selectedBusinessId } = useSelectedBusiness();
