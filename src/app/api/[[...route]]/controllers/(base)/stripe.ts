@@ -68,7 +68,7 @@ const app = new Hono()
       z.object({
         priceId: z.string().optional(),
         amount: z.number().positive().optional(),
-        currency: z.string().default("usd"),
+        currency: z.string().default("pkr"),
         mode: z.enum(["payment", "subscription"]).default("payment"),
         successUrl: z.string(),
         cancelUrl: z.string(),

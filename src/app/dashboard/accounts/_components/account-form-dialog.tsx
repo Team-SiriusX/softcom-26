@@ -119,6 +119,7 @@ export function AccountFormDialog({
               id="code"
               {...form.register("code", { required: true })}
               placeholder="e.g. 1000"
+              className="w-full"
             />
           </div>
 
@@ -128,6 +129,7 @@ export function AccountFormDialog({
               id="name"
               {...form.register("name", { required: true })}
               placeholder="e.g. Cash"
+              className="w-full"
             />
           </div>
 
@@ -150,7 +152,7 @@ export function AccountFormDialog({
                 }
               }}
             >
-              <SelectTrigger>
+              <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select type" />
               </SelectTrigger>
               <SelectContent>
@@ -170,7 +172,7 @@ export function AccountFormDialog({
                 value={form.watch("subType")}
                 onValueChange={(value) => form.setValue("subType", value)}
               >
-                <SelectTrigger>
+                <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select sub type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -191,6 +193,7 @@ export function AccountFormDialog({
               {...form.register("description")}
               placeholder="Optional description"
               rows={3}
+              className="w-full"
             />
           </div>
 

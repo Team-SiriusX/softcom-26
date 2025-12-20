@@ -93,7 +93,7 @@ export function BusinessFormDialog({
           phone: business.phone || "",
           address: business.address || "",
           taxId: business.taxId || "",
-          currency: business.currency || "USD",
+          currency: business.currency || "PKR",
           fiscalYearStart: business.fiscalYearStart || 1,
         }
       : {
@@ -166,14 +166,14 @@ export function BusinessFormDialog({
                 <FormItem>
                   <FormLabel>Business Name *</FormLabel>
                   <FormControl>
-                    <Input placeholder="Acme Corporation" {...field} />
+                    <Input placeholder="Acme Corporation" {...field} className="w-full" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="email"
@@ -185,6 +185,7 @@ export function BusinessFormDialog({
                         type="email"
                         placeholder="contact@acme.com"
                         {...field}
+                        className="w-full"
                       />
                     </FormControl>
                     <FormMessage />
@@ -199,7 +200,7 @@ export function BusinessFormDialog({
                   <FormItem>
                     <FormLabel>Phone</FormLabel>
                     <FormControl>
-                      <Input placeholder="+1 (555) 123-4567" {...field} />
+                      <Input placeholder="+1 (555) 123-4567" {...field} className="w-full" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -214,7 +215,7 @@ export function BusinessFormDialog({
                 <FormItem>
                   <FormLabel>Address</FormLabel>
                   <FormControl>
-                    <Input placeholder="123 Main St, City, State" {...field} />
+                    <Input placeholder="123 Main St, City, State" {...field} className="w-full" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -228,14 +229,14 @@ export function BusinessFormDialog({
                 <FormItem>
                   <FormLabel>Tax ID / EIN</FormLabel>
                   <FormControl>
-                    <Input placeholder="XX-XXXXXXX" {...field} />
+                    <Input placeholder="XX-XXXXXXX" {...field} className="w-full" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="currency"
@@ -247,7 +248,7 @@ export function BusinessFormDialog({
                       defaultValue={field.value}
                     >
                       <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger className="w-full">
                           <SelectValue placeholder="Select currency" />
                         </SelectTrigger>
                       </FormControl>
@@ -278,7 +279,7 @@ export function BusinessFormDialog({
                       defaultValue={field.value.toString()}
                     >
                       <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger className="w-full">
                           <SelectValue placeholder="Select month" />
                         </SelectTrigger>
                       </FormControl>

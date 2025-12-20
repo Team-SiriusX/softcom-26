@@ -331,13 +331,13 @@ export default function ReportsPage() {
                         <div>
                           <div className="flex items-center justify-between">
                             <h4 className="text-sm font-semibold">Current assets</h4>
-                            <span className="text-sm font-semibold">${balanceSheet.assets.currentAssets.total.toLocaleString()}</span>
+                            <span className="text-sm font-semibold">Rs {balanceSheet.assets.currentAssets.total.toLocaleString()}</span>
                           </div>
                           <div className="mt-3 space-y-2">
                             {balanceSheet.assets.currentAssets.accounts.map((acc: any) => (
                               <div key={acc.id} className="flex items-center justify-between text-sm">
                                 <span className="text-muted-foreground">{acc.name}</span>
-                                <span className="font-medium">${acc.balance.toLocaleString()}</span>
+                                <span className="font-medium">Rs {acc.balance.toLocaleString()}</span>
                               </div>
                             ))}
                           </div>
@@ -346,13 +346,13 @@ export default function ReportsPage() {
                         <div className="border-t border-border/60 pt-4">
                           <div className="flex items-center justify-between">
                             <h4 className="text-sm font-semibold">Fixed assets</h4>
-                            <span className="text-sm font-semibold">${balanceSheet.assets.fixedAssets.total.toLocaleString()}</span>
+                            <span className="text-sm font-semibold">Rs {balanceSheet.assets.fixedAssets.total.toLocaleString()}</span>
                           </div>
                           <div className="mt-3 space-y-2">
                             {balanceSheet.assets.fixedAssets.accounts.map((acc: any) => (
                               <div key={acc.id} className="flex items-center justify-between text-sm">
                                 <span className="text-muted-foreground">{acc.name}</span>
-                                <span className="font-medium">${acc.balance.toLocaleString()}</span>
+                                <span className="font-medium">Rs {acc.balance.toLocaleString()}</span>
                               </div>
                             ))}
                           </div>
@@ -360,7 +360,7 @@ export default function ReportsPage() {
 
                         <div className="border-t-2 border-border/60 pt-4 flex items-center justify-between">
                           <span className="text-sm font-semibold">Total assets</span>
-                          <span className="text-base font-bold">${balanceSheet.assets.total.toLocaleString()}</span>
+                          <span className="text-base font-bold">Rs {balanceSheet.assets.total.toLocaleString()}</span>
                         </div>
                       </CardContent>
                     </Card>
@@ -374,38 +374,38 @@ export default function ReportsPage() {
                         <div>
                           <div className="flex items-center justify-between">
                             <h4 className="text-sm font-semibold">Current liabilities</h4>
-                            <span className="text-sm font-semibold">${balanceSheet.liabilities.currentLiabilities.total.toLocaleString()}</span>
+                            <span className="text-sm font-semibold">Rs {balanceSheet.liabilities.currentLiabilities.total.toLocaleString()}</span>
                           </div>
                           <div className="mt-3 space-y-2">
                             {balanceSheet.liabilities.currentLiabilities.accounts.map((acc: any) => (
                               <div key={acc.id} className="flex items-center justify-between text-sm">
                                 <span className="text-muted-foreground">{acc.name}</span>
-                                <span className="font-medium">${acc.balance.toLocaleString()}</span>
+                                <span className="font-medium">Rs {acc.balance.toLocaleString()}</span>
                               </div>
                             ))}
                           </div>
                           <div className="mt-3 pt-3 border-t border-border/60 flex items-center justify-between text-sm">
                             <span className="font-semibold">Total liabilities</span>
-                            <span className="font-semibold">${balanceSheet.liabilities.total.toLocaleString()}</span>
+                            <span className="font-semibold">Rs {balanceSheet.liabilities.total.toLocaleString()}</span>
                           </div>
                         </div>
 
                         <div className="border-t border-border/60 pt-4">
                           <div className="flex items-center justify-between">
                             <h4 className="text-sm font-semibold">Equity</h4>
-                            <span className="text-sm font-semibold">${balanceSheet.equity.total.toLocaleString()}</span>
+                            <span className="text-sm font-semibold">Rs {balanceSheet.equity.total.toLocaleString()}</span>
                           </div>
                           <div className="mt-3 space-y-2">
                             {balanceSheet.equity.ownersEquity.accounts.map((acc: any) => (
                               <div key={acc.id} className="flex items-center justify-between text-sm">
                                 <span className="text-muted-foreground">{acc.name}</span>
-                                <span className="font-medium">${acc.balance.toLocaleString()}</span>
+                                <span className="font-medium">Rs {acc.balance.toLocaleString()}</span>
                               </div>
                             ))}
                             {balanceSheet.equity.retainedEarnings.accounts.map((acc: any) => (
                               <div key={acc.id} className="flex items-center justify-between text-sm">
                                 <span className="text-muted-foreground">{acc.name}</span>
-                                <span className="font-medium">${acc.balance.toLocaleString()}</span>
+                                <span className="font-medium">Rs {acc.balance.toLocaleString()}</span>
                               </div>
                             ))}
                           </div>
@@ -413,7 +413,7 @@ export default function ReportsPage() {
 
                         <div className="border-t-2 border-border/60 pt-4 flex items-center justify-between">
                           <span className="text-sm font-semibold">Total liabilities & equity</span>
-                          <span className="text-base font-bold">${balanceSheet.totals.liabilitiesAndEquity.toLocaleString()}</span>
+                          <span className="text-base font-bold">Rs {balanceSheet.totals.liabilitiesAndEquity.toLocaleString()}</span>
                         </div>
                       </CardContent>
                     </Card>
@@ -426,7 +426,7 @@ export default function ReportsPage() {
                         <CardTitle className="text-sm">Working Capital</CardTitle>
                       </CardHeader>
                       <CardContent>
-                        <div className="text-2xl font-bold">${balanceSheet.metrics.workingCapital.toLocaleString()}</div>
+                        <div className="text-2xl font-bold">Rs {balanceSheet.metrics.workingCapital.toLocaleString()}</div>
                       </CardContent>
                     </Card>
                     <Card className="bg-background border border-border/60 shadow-sm">
@@ -480,7 +480,7 @@ export default function ReportsPage() {
                         <CardTitle className="text-sm text-muted-foreground">Total Revenue</CardTitle>
                       </CardHeader>
                       <CardContent>
-                        <div className="text-2xl font-bold tracking-tight">${profitLoss.revenue.total.toLocaleString()}</div>
+                        <div className="text-2xl font-bold tracking-tight">Rs {profitLoss.revenue.total.toLocaleString()}</div>
                       </CardContent>
                     </Card>
                     <Card className="bg-background border border-border/60 shadow-sm">
@@ -488,7 +488,7 @@ export default function ReportsPage() {
                         <CardTitle className="text-sm text-muted-foreground">Total Expenses</CardTitle>
                       </CardHeader>
                       <CardContent>
-                        <div className="text-2xl font-bold tracking-tight">${profitLoss.expenses.total.toLocaleString()}</div>
+                        <div className="text-2xl font-bold tracking-tight">Rs {profitLoss.expenses.total.toLocaleString()}</div>
                       </CardContent>
                     </Card>
                     <Card className="bg-background border border-border/60 shadow-sm">
@@ -514,12 +514,12 @@ export default function ReportsPage() {
                         {profitLoss.revenue.operatingRevenue.accounts.map((acc: any) => (
                           <div key={acc.id} className="flex items-center justify-between text-sm">
                             <span className="text-muted-foreground">{acc.name}</span>
-                            <span className="font-medium">${acc.balance.toLocaleString()}</span>
+                            <span className="font-medium">Rs {acc.balance.toLocaleString()}</span>
                           </div>
                         ))}
                         <div className="pt-3 mt-2 border-t border-border/60 flex items-center justify-between">
                           <span className="text-sm font-semibold">Total revenue</span>
-                          <span className="text-sm font-semibold">${profitLoss.revenue.total.toLocaleString()}</span>
+                          <span className="text-sm font-semibold">Rs {profitLoss.revenue.total.toLocaleString()}</span>
                         </div>
                       </CardContent>
                     </Card>
@@ -533,12 +533,12 @@ export default function ReportsPage() {
                         {profitLoss.expenses.operatingExpenses.accounts.map((acc: any) => (
                           <div key={acc.id} className="flex items-center justify-between text-sm">
                             <span className="text-muted-foreground">{acc.name}</span>
-                            <span className="font-medium">${acc.balance.toLocaleString()}</span>
+                            <span className="font-medium">Rs {acc.balance.toLocaleString()}</span>
                           </div>
                         ))}
                         <div className="pt-3 mt-2 border-t border-border/60 flex items-center justify-between">
                           <span className="text-sm font-semibold">Total expenses</span>
-                          <span className="text-sm font-semibold">${profitLoss.expenses.total.toLocaleString()}</span>
+                          <span className="text-sm font-semibold">Rs {profitLoss.expenses.total.toLocaleString()}</span>
                         </div>
                       </CardContent>
                     </Card>
@@ -604,7 +604,7 @@ export default function ReportsPage() {
                         <CardTitle className="text-sm text-muted-foreground">Opening Balance</CardTitle>
                       </CardHeader>
                       <CardContent>
-                        <div className="text-2xl font-bold tracking-tight">${cashFlow.summary.openingBalance.toLocaleString()}</div>
+                        <div className="text-2xl font-bold tracking-tight">Rs {cashFlow.summary.openingBalance.toLocaleString()}</div>
                       </CardContent>
                     </Card>
                     <Card className="bg-background border border-border/60 shadow-sm">

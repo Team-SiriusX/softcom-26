@@ -103,7 +103,7 @@ export function TransactionFormDialog({
               value={form.watch("type")}
               onValueChange={(value) => form.setValue("type", value)}
             >
-              <SelectTrigger>
+              <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select type" />
               </SelectTrigger>
               <SelectContent>
@@ -120,6 +120,7 @@ export function TransactionFormDialog({
               id="date"
               type="date"
               {...form.register("date", { required: true })}
+              className="w-full"
             />
           </div>
 
@@ -132,6 +133,7 @@ export function TransactionFormDialog({
               min="0"
               {...form.register("amount", { required: true })}
               placeholder="0.00"
+              className="w-full"
             />
           </div>
 
@@ -141,7 +143,7 @@ export function TransactionFormDialog({
               value={form.watch("ledgerAccountId")}
               onValueChange={(value) => form.setValue("ledgerAccountId", value)}
             >
-              <SelectTrigger>
+              <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select account" />
               </SelectTrigger>
               <SelectContent>
@@ -166,7 +168,7 @@ export function TransactionFormDialog({
               value={form.watch("contraAccountId")}
               onValueChange={(value) => form.setValue("contraAccountId", value)}
             >
-              <SelectTrigger>
+              <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select contra account" />
               </SelectTrigger>
               <SelectContent>
@@ -186,7 +188,7 @@ export function TransactionFormDialog({
                 value={form.watch("categoryId")}
                 onValueChange={(value) => form.setValue("categoryId", value)}
               >
-                <SelectTrigger>
+                <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select category (optional)" />
                 </SelectTrigger>
                 <SelectContent>
@@ -213,6 +215,7 @@ export function TransactionFormDialog({
               {...form.register("description", { required: true })}
               placeholder="Describe the transaction"
               rows={3}
+              className="w-full"
             />
           </div>
 
@@ -222,6 +225,7 @@ export function TransactionFormDialog({
               id="referenceNumber"
               {...form.register("referenceNumber")}
               placeholder="Optional reference or invoice #"
+              className="w-full"
             />
           </div>
 

@@ -12,6 +12,8 @@ import {
   PieChart,
   Briefcase,
   Bot,
+  Users,
+  FileText as Invoice,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SignOutButton } from "@/components/auth/sign-out-button";
@@ -26,6 +28,16 @@ const navigation = [
     name: "Transactions",
     href: "/dashboard/transactions",
     icon: Receipt,
+  },
+  {
+    name: "Invoices",
+    href: "/dashboard/invoices",
+    icon: Invoice,
+  },
+  {
+    name: "Clients",
+    href: "/dashboard/clients",
+    icon: Users,
   },
   {
     name: "Accounts",

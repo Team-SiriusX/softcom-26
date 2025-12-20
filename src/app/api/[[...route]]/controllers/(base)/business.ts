@@ -60,7 +60,7 @@ const app = new Hono()
         phone: z.string().optional(),
         address: z.string().optional(),
         taxId: z.string().optional(),
-        currency: z.string().default("USD"),
+        currency: z.string().default("PKR"),
         fiscalYearStart: z.number().min(1).max(12).default(1),
       })
     ),
