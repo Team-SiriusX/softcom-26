@@ -12,3 +12,6 @@ export { default as simulator } from "./simulator";
 export { default as clients } from "./clients";
 export { default as invoices } from "./invoices";
 export { default as collector } from "./collector";
+
+export { default as members } from "./members";
+export { default as profile } from "./profile";

@@ -1,5 +1,5 @@
 {
-  "name": "softcom-26",
+  "name": "finora",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -52,6 +52,7 @@
     "@stripe/stripe-js": "^8.6.0",
     "@studio-freight/lenis": "^1.0.42",
     "@tanstack/react-query": "^5.90.3",
+    "@uploadthing/react": "^7.3.3",
     "@upstash/redis": "^1.35.8",
     "@upstash/vector": "^1.2.2",
     "better-auth": "^1.3.27",
@@ -77,6 +78,7 @@
     "stripe": "^20.1.0",
     "tailwind-merge": "^3.3.1",
     "three": "^0.182.0",
+    "uploadthing": "^7.7.4",
     "vaul": "^1.1.2",
     "zod": "^4.1.12"
   },

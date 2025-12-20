@@ -1,10 +1,10 @@
 <div align="center">
 
-# 💰 FinanceFlow
+# 💰 Finora
 
-### Modern Double-Entry Accounting Platform
+### AI-Powered Accounting Platform
 
-A powerful, full-stack accounting application built with Next.js 15, featuring double-entry bookkeeping, multi-business support, real-time analytics, and Stripe subscription billing.
+A powerful, full-stack accounting application built with Next.js 15, featuring double-entry bookkeeping, multi-business support, AI-driven insights, and Stripe subscription billing.
 
 [![Next.js](https://img.shields.io/badge/Next.js-15.5-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
 [![React](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react)](https://react.dev/)

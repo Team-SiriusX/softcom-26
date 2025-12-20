@@ -14,8 +14,12 @@ import {
   Bot,
   Users,
   FileText as Invoice,
+
   Mail,
   Calculator,
+
+  UserCog,
+  User,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SignOutButton } from "@/components/auth/sign-out-button";
@@ -77,6 +81,11 @@ const navigation = [
     icon: Bot,
   },
   {
+    name: "Team",
+    href: "/dashboard/team",
+    icon: UserCog,
+  },
+  {
     name: "Business",
     href: "/dashboard/business",
     icon: Briefcase,
@@ -91,9 +100,9 @@ export function AppSidebar() {
       <div className="px-6 pt-6">
         <Link href="/" className="flex items-center gap-2">
           <div className="h-9 w-9 rounded-full bg-[#22D3EE] flex items-center justify-center shadow-sm">
-            <span className="font-bold text-black">L</span>
+            <span className="font-bold text-black">F</span>
           </div>
-          <span className="text-lg font-semibold tracking-tight">LOGO</span>
+          <span className="text-lg font-semibold tracking-tight">Finora</span>
         </Link>
       </div>
 

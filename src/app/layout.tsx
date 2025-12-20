@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Accounting Software - AI CFO Dashboard",
-  description: "Smart accounting with AI-powered financial insights",
+  title: "Finora - AI-Powered Accounting Platform",
+  description: "Modern accounting software that combines traditional double-entry bookkeeping with AI-driven financial intelligence",
 };
 
 export default function RootLayout({
