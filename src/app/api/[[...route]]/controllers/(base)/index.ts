@@ -8,6 +8,7 @@ export { default as reports } from "./reports";
 export { default as analytics } from "./analytics";
 export { default as stripe } from "./stripe";
 export { default as agent } from "./agent";
+export { default as simulator } from "./simulator";
 export { default as clients } from "./clients";
 export { default as invoices } from "./invoices";
 export { default as members } from "./members";

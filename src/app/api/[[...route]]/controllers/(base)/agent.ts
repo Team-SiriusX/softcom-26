@@ -68,8 +68,170 @@ function isVectorConfigured(): boolean {
 
 const app = new Hono()
   /**
+   * POST /api/agent/voice/stream
+   * OPTIMIZED: Streaming voice query endpoint with semantic caching
+   * Returns Server-Sent Events for real-time response
+   */
+  .post("/voice/stream", zValidator("json", voiceQuerySchema), async (c) => {
+    console.log("[Agent API] Streaming voice endpoint called");
+    
+    const user = await currentUser();
+    if (!user) {
+      return c.json({ error: "Unauthorized" }, 401);
+    }
+
+    const { query, sessionId, businessId } = c.req.valid("json");
+
+    // Check subscription limits
+    const subscription = await db.subscription.findUnique({
+      where: { userId: user.id },
+    });
+
+    const tier = subscription?.tier || "FREE";
+    const tierLimits = TIER_LIMITS[tier];
+    const aiQueriesUsed = subscription?.aiQueriesUsed || 0;
+    const aiQueriesLimit = subscription?.aiQueriesLimit ?? tierLimits.aiQueriesLimit;
+
+    if (aiQueriesLimit !== -1 && aiQueriesUsed >= aiQueriesLimit) {
+      return c.json(
+        { success: false, error: "AI query limit reached", limitReached: true },
+        403
+      );
+    }
+
+    if (tier === "FREE") {
+      return c.json(
+        { success: false, error: "AI assistant not available on Free plan", upgradeRequired: true },
+        403
+      );
+    }
+
+    try {
+      const { streamAgentQuery, generateSessionId } = await import("@/lib/agent");
+
+      // Set headers for SSE
+      c.header("Content-Type", "text/event-stream");
+      c.header("Cache-Control", "no-cache");
+      c.header("Connection", "keep-alive");
+
+      // Create stream generator
+      const stream = streamAgentQuery({
+        query,
+        sessionId: sessionId || generateSessionId(),
+        businessId,
+        userId: user.id,
+      });
+
+      // Increment AI queries used
+      if (subscription) {
+        await db.subscription.update({
+          where: { userId: user.id },
+          data: { aiQueriesUsed: { increment: 1 } },
+        });
+      }
+
+      // Return streaming response
+      return c.body(
+        new ReadableStream({
+          async start(controller) {
+            try {
+              for await (const chunk of stream) {
+                controller.enqueue(new TextEncoder().encode(chunk));
+              }
+              controller.close();
+            } catch (error) {
+              console.error("[Streaming Error]", error);
+              controller.error(error);
+            }
+          },
+        })
+      );
+    } catch (error) {
+      console.error("[Agent Stream Error]", error);
+      return c.json(
+        { success: false, error: error instanceof Error ? error.message : "Stream failed" },
+        500
+      );
+    }
+  })
+
+  /**
+   * POST /api/agent/voice/optimized
+   * OPTIMIZED: Fast voice query with semantic caching & intent routing
+   */
+  .post("/voice/optimized", zValidator("json", voiceQuerySchema), async (c) => {
+    console.log("[Agent API] Optimized voice endpoint called");
+    
+    const user = await currentUser();
+    if (!user) {
+      return c.json({ error: "Unauthorized" }, 401);
+    }
+
+    const { query, sessionId, businessId } = c.req.valid("json");
+
+    // Check subscription limits
+    const subscription = await db.subscription.findUnique({
+      where: { userId: user.id },
+    });
+
+    const tier = subscription?.tier || "FREE";
+    const tierLimits = TIER_LIMITS[tier];
+    const aiQueriesUsed = subscription?.aiQueriesUsed || 0;
+    const aiQueriesLimit = subscription?.aiQueriesLimit ?? tierLimits.aiQueriesLimit;
+
+    if (aiQueriesLimit !== -1 && aiQueriesUsed >= aiQueriesLimit) {
+      return c.json(
+        { success: false, error: "AI query limit reached", limitReached: true },
+        403
+      );
+    }
+
+    if (tier === "FREE") {
+      return c.json(
+        { success: false, error: "AI assistant not available on Free plan", upgradeRequired: true },
+        403
+      );
+    }
+
+    try {
+      const { processOptimizedAgentQuery, generateSessionId } = await import("@/lib/agent");
+
+      const response = await processOptimizedAgentQuery({
+        query,
+        sessionId: sessionId || generateSessionId(),
+        businessId,
+        userId: user.id,
+      });
+
+      // Increment AI queries used
+      if (subscription) {
+        await db.subscription.update({
+          where: { userId: user.id },
+          data: { aiQueriesUsed: { increment: 1 } },
+        });
+      }
+
+      return c.json({
+        success: true,
+        data: response,
+        usage: {
+          aiQueriesUsed: aiQueriesUsed + 1,
+          aiQueriesLimit,
+          tier,
+        },
+      });
+    } catch (error) {
+      console.error("[Agent Optimized Error]", error);
+      return c.json(
+        { success: false, error: error instanceof Error ? error.message : "Query failed" },
+        500
+      );
+    }
+  })
+
+  /**
    * POST /api/agent/voice
-   * Main voice query endpoint
+   * Main voice query endpoint (ORIGINAL - kept for compatibility)
    */
   .post("/voice", zValidator("json", voiceQuerySchema), async (c) => {
     console.log("[Agent API] Voice endpoint called");
@@ -400,9 +562,12 @@ const app = new Hono()
       }
 
       try {
-        const { buildDashboardSnapshot, cacheDashboardSnapshot } = await import(
+        const { buildDashboardSnapshot, cacheDashboardSnapshot, invalidateCache } = await import(
           "@/lib/agent"
         );
+
+        // Invalidate semantic cache (fresh data means old cached responses are stale)
+        await invalidateCache(businessId);
 
         // Build and cache dashboard snapshot
         const snapshot = await buildDashboardSnapshot(businessId);

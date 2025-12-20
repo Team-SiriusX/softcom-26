@@ -12,6 +12,7 @@ import {
   analytics,
   stripe,
   agent,
+  simulator,
   clients,
   invoices,
   members,
@@ -41,6 +42,7 @@ const routes = app
   .route("/analytics", analytics)
   .route("/stripe", stripe)
   .route("/agent", agent)
+  .route("/simulator", simulator)
   .route("/clients", clients)
   .route("/invoices", invoices)
   .route("/members", members)

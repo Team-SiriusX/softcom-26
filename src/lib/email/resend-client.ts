@@ -50,19 +50,23 @@ export async function sendEmail(
     // Use configured from address or default
     const from = options.from || process.env.RESEND_EMAIL || "noreply@nexcodes.me";
 
-    // Send email
-    const { data, error } = await resend.emails.send({
+    // Build email payload, filtering out undefined values
+    const emailPayload: Record<string, any> = {
       from,
       to: options.to,
       subject: options.subject,
-      html: options.html,
-      text: options.text,
-      replyTo: options.replyTo,
-      cc: options.cc,
-      bcc: options.bcc,
-      attachments: options.attachments,
-      tags: options.tags,
-    });
+    };
+
+    if (options.html) emailPayload.html = options.html;
+    if (options.text) emailPayload.text = options.text;
+    if (options.replyTo) emailPayload.replyTo = options.replyTo;
+    if (options.cc) emailPayload.cc = options.cc;
+    if (options.bcc) emailPayload.bcc = options.bcc;
+    if (options.attachments) emailPayload.attachments = options.attachments;
+    if (options.tags) emailPayload.tags = options.tags;
+
+    // Send email
+    const { data, error } = await resend.emails.send(emailPayload as any);
 
     if (error) {
       console.error("[Email] Send failed:", error);
