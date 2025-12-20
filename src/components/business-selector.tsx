@@ -19,12 +19,12 @@ export function BusinessSelector() {
 
   if (!businesses || businesses.length === 0) {
     return (
-      <Link href="/business">
-        <Button variant="outline" size="sm">
+      <Button variant="outline" size="sm" asChild>
+        <Link href="/business">
           <Building2 className="mr-2 h-4 w-4" />
           Create Business
-        </Button>
-      </Link>
+        </Link>
+      </Button>
     );
   }
 

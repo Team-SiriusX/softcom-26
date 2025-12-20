@@ -18,12 +18,15 @@ const app = new Hono()
    */
   .post(
     "/create-payment-intent",
-    zValidator("json", z.object({
-      amount: z.number().positive(),
-      currency: z.string().default("usd"),
-      description: z.string().optional(),
-      metadata: z.record(z.string(), z.string()).optional(),
-    })),
+    zValidator(
+      "json",
+      z.object({
+        amount: z.number().positive(),
+        currency: z.string().default("usd"),
+        description: z.string().optional(),
+        metadata: z.record(z.string(), z.string()).optional(),
+      })
+    ),
     async (c) => {
       const user = await currentUser();
       if (!user) {
@@ -60,23 +63,33 @@ const app = new Hono()
    */
   .post(
     "/create-checkout-session",
-    zValidator("json", z.object({
-      priceId: z.string().optional(),
-      amount: z.number().positive().optional(),
-      currency: z.string().default("usd"),
-      mode: z.enum(["payment", "subscription"]).default("payment"),
-      successUrl: z.string(),
-      cancelUrl: z.string(),
-      metadata: z.record(z.string(), z.string()).optional(),
-    })),
+    zValidator(
+      "json",
+      z.object({
+        priceId: z.string().optional(),
+        amount: z.number().positive().optional(),
+        currency: z.string().default("usd"),
+        mode: z.enum(["payment", "subscription"]).default("payment"),
+        successUrl: z.string(),
+        cancelUrl: z.string(),
+        metadata: z.record(z.string(), z.string()).optional(),
+      })
+    ),
     async (c) => {
       const user = await currentUser();
       if (!user) {
         return c.json({ error: "Unauthorized" }, 401);
       }
 
-      const { priceId, amount, currency, mode, successUrl, cancelUrl, metadata } =
-        c.req.valid("json");
+      const {
+        priceId,
+        amount,
+        currency,
+        mode,
+        successUrl,
+        cancelUrl,
+        metadata,
+      } = c.req.valid("json");
 
       try {
         const sessionParams: Stripe.Checkout.SessionCreateParams = {
@@ -92,6 +105,13 @@ const app = new Hono()
         };
 
         if (mode === "subscription" && priceId) {
+          // For subscriptions, also add metadata to subscription_data
+          sessionParams.subscription_data = {
+            metadata: {
+              userId: user.id,
+              ...metadata,
+            },
+          };
           sessionParams.line_items = [
             {
               price: priceId,
@@ -113,7 +133,10 @@ const app = new Hono()
           ];
         } else {
           return c.json(
-            { error: "Invalid parameters: priceId required for subscription, amount for payment" },
+            {
+              error:
+                "Invalid parameters: priceId required for subscription, amount for payment",
+            },
             400
           );
         }
@@ -144,7 +167,9 @@ const app = new Hono()
     const { paymentIntentId } = c.req.param();
 
     try {
-      const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+      const paymentIntent = await stripe.paymentIntents.retrieve(
+        paymentIntentId
+      );
 
       return c.json({
         id: paymentIntent.id,
@@ -222,34 +247,37 @@ const app = new Hono()
 
     try {
       const body = await c.req.text();
-      const event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
+      const event = stripe.webhooks.constructEvent(
+        body,
+        signature,
+        webhookSecret
+      );
 
-      // Handle payment_intent.succeeded event
-      if (event.type === "payment_intent.succeeded") {
-        const paymentIntent = event.data.object as Stripe.PaymentIntent;
-        console.log("Payment intent succeeded:", paymentIntent.id);
+      // Handle checkout.session.completed event (more reliable for subscriptions)
+      if (event.type === "checkout.session.completed") {
+        const session = event.data.object as Stripe.Checkout.Session;
+        console.log("Checkout session completed:", session.id);
 
-        const userId = paymentIntent.metadata?.userId;
-        const customerId = paymentIntent.customer as string;
+        const userId = session.metadata?.userId;
+        const customerId = session.customer as string;
 
         if (!userId) {
-          console.error("No userId in payment intent metadata");
+          console.error("No userId in session metadata");
           return c.json({ error: "No userId in metadata" }, 400);
         }
 
-        // Get invoice to retrieve subscription details
-        const invoiceId = (paymentIntent as any).invoice;
-        const invoice = invoiceId
-          ? await stripe.invoices.retrieve(invoiceId as string)
-          : null;
-
-        if (invoice && typeof (invoice as any).subscription === 'string') {
-          // This is a subscription payment
-          const subscriptionId = (invoice as any).subscription as string;
-          const stripeSubscription = await stripe.subscriptions.retrieve(subscriptionId);
-          const priceId = typeof stripeSubscription.items.data[0].price === 'string' 
-            ? stripeSubscription.items.data[0].price 
-            : stripeSubscription.items.data[0].price.id;
+        if (session.mode === "subscription" && session.subscription) {
+          const subscriptionId = session.subscription as string;
+          const stripeSubscription = await stripe.subscriptions.retrieve(
+            subscriptionId
+          );
+          const priceId =
+            typeof stripeSubscription.items.data[0].price === "string"
+              ? stripeSubscription.items.data[0].price
+              : stripeSubscription.items.data[0].price.id;
+          const currentPeriodEnd = new Date(
+            (stripeSubscription as any).current_period_end * 1000
+          );
 
           // Determine tier based on price ID
           let tier: "PRO" | "BUSINESS" = "PRO";
@@ -260,14 +288,19 @@ const app = new Hono()
             priceId === process.env.STRIPE_PRO_ANNUAL_PRICE_ID
           ) {
             tier = "PRO";
-            billingCycle = priceId === process.env.STRIPE_PRO_ANNUAL_PRICE_ID ? "ANNUAL" : "MONTHLY";
+            billingCycle =
+              priceId === process.env.STRIPE_PRO_ANNUAL_PRICE_ID
+                ? "ANNUAL"
+                : "MONTHLY";
           } else if (
             priceId === process.env.STRIPE_BUSINESS_MONTHLY_PRICE_ID ||
             priceId === process.env.STRIPE_BUSINESS_ANNUAL_PRICE_ID
           ) {
             tier = "BUSINESS";
             billingCycle =
-              priceId === process.env.STRIPE_BUSINESS_ANNUAL_PRICE_ID ? "ANNUAL" : "MONTHLY";
+              priceId === process.env.STRIPE_BUSINESS_ANNUAL_PRICE_ID
+                ? "ANNUAL"
+                : "MONTHLY";
           }
 
           // Set limits based on tier
@@ -290,7 +323,7 @@ const app = new Hono()
               userId,
               stripeSubscriptionId: subscriptionId,
               stripePriceId: priceId,
-              stripeCurrentPeriodEnd: new Date((stripeSubscription as any).current_period_end * 1000),
+              stripeCurrentPeriodEnd: currentPeriodEnd,
               tier,
               status: "ACTIVE",
               billingCycle,
@@ -301,7 +334,7 @@ const app = new Hono()
             update: {
               stripeSubscriptionId: subscriptionId,
               stripePriceId: priceId,
-              stripeCurrentPeriodEnd: new Date((stripeSubscription as any).current_period_end * 1000),
+              stripeCurrentPeriodEnd: currentPeriodEnd,
               tier,
               status: "ACTIVE",
               billingCycle,
@@ -311,10 +344,129 @@ const app = new Hono()
             },
           });
 
-          console.log(`Subscription payment processed for user ${userId} - Tier: ${tier}`);
-        } else {
-          // This is a one-time payment
-          console.log(`One-time payment processed for user ${userId}: $${paymentIntent.amount / 100}`);
+          console.log(
+            `Subscription created for user ${userId} - Tier: ${tier}`
+          );
+        }
+      }
+
+      // Handle payment_intent.succeeded event
+      if (event.type === "payment_intent.succeeded") {
+        const paymentIntent = event.data.object as Stripe.PaymentIntent;
+        console.log("Payment intent succeeded:", paymentIntent.id);
+
+        // Try to get userId from payment intent metadata first, then from subscription metadata
+        let userId = paymentIntent.metadata?.userId;
+        const customerId = paymentIntent.customer as string;
+
+        // Get invoice to retrieve subscription details
+        const invoiceId = (paymentIntent as any).invoice;
+        const invoice = invoiceId
+          ? await stripe.invoices.retrieve(invoiceId as string)
+          : null;
+
+        if (invoice && typeof (invoice as any).subscription === "string") {
+          // This is a subscription payment
+          const subscriptionId = (invoice as any).subscription as string;
+          const stripeSubscription = await stripe.subscriptions.retrieve(
+            subscriptionId
+          );
+          const currentPeriodEnd = new Date(
+            (stripeSubscription as any).current_period_end * 1000
+          );
+
+          // If userId not in payment intent, try to get it from subscription metadata
+          if (!userId) {
+            userId = stripeSubscription.metadata?.userId;
+          }
+
+          if (!userId) {
+            console.error(
+              "No userId in payment intent or subscription metadata"
+            );
+            return c.json({ error: "No userId in metadata" }, 400);
+          }
+
+          const priceId =
+            typeof stripeSubscription.items.data[0].price === "string"
+              ? stripeSubscription.items.data[0].price
+              : stripeSubscription.items.data[0].price.id;
+
+          // Determine tier based on price ID
+          let tier: "PRO" | "BUSINESS" = "PRO";
+          let billingCycle: "MONTHLY" | "ANNUAL" = "MONTHLY";
+
+          if (
+            priceId === process.env.STRIPE_PRO_MONTHLY_PRICE_ID ||
+            priceId === process.env.STRIPE_PRO_ANNUAL_PRICE_ID
+          ) {
+            tier = "PRO";
+            billingCycle =
+              priceId === process.env.STRIPE_PRO_ANNUAL_PRICE_ID
+                ? "ANNUAL"
+                : "MONTHLY";
+          } else if (
+            priceId === process.env.STRIPE_BUSINESS_MONTHLY_PRICE_ID ||
+            priceId === process.env.STRIPE_BUSINESS_ANNUAL_PRICE_ID
+          ) {
+            tier = "BUSINESS";
+            billingCycle =
+              priceId === process.env.STRIPE_BUSINESS_ANNUAL_PRICE_ID
+                ? "ANNUAL"
+                : "MONTHLY";
+          }
+
+          // Set limits based on tier
+          const aiQueriesLimit = tier === "PRO" ? 30 : 150;
+          const transactionsLimit = -1; // unlimited for paid tiers
+          const businessAccountsLimit = tier === "PRO" ? 3 : -1;
+
+          // Update user and subscription in database
+          await db.user.update({
+            where: { id: userId },
+            data: {
+              stripeCustomerId: customerId,
+              subscriptionTier: tier,
+            },
+          });
+
+          await db.subscription.upsert({
+            where: { userId },
+            create: {
+              userId,
+              stripeSubscriptionId: subscriptionId,
+              stripePriceId: priceId,
+              stripeCurrentPeriodEnd: currentPeriodEnd,
+              tier,
+              status: "ACTIVE",
+              billingCycle,
+              aiQueriesLimit,
+              transactionsLimit,
+              businessAccountsLimit,
+            },
+            update: {
+              stripeSubscriptionId: subscriptionId,
+              stripePriceId: priceId,
+              stripeCurrentPeriodEnd: currentPeriodEnd,
+              tier,
+              status: "ACTIVE",
+              billingCycle,
+              aiQueriesLimit,
+              transactionsLimit,
+              businessAccountsLimit,
+            },
+          });
+
+          console.log(
+            `Subscription payment processed for user ${userId} - Tier: ${tier}`
+          );
+        } else if (userId) {
+          // This is a one-time payment with userId
+          console.log(
+            `One-time payment processed for user ${userId}: $${
+              paymentIntent.amount / 100
+            }`
+          );
         }
       }
 

@@ -13,7 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { User } from "lucide-react";
+import { User, LogOut } from "lucide-react";
 
 export function UserNav() {
   const { data: session, isPending } = useSession();
@@ -27,12 +27,12 @@ export function UserNav() {
   if (!session?.user) {
     return (
       <div className="flex items-center gap-2">
-        <Link href="/auth/sign-in">
-          <Button variant="ghost">Sign In</Button>
-        </Link>
-        <Link href="/auth/sign-up">
-          <Button>Sign Up</Button>
-        </Link>
+        <Button variant="ghost" asChild>
+          <Link href="/auth/sign-in">Sign In</Link>
+        </Button>
+        <Button asChild>
+          <Link href="/auth/sign-up">Sign Up</Link>
+        </Button>
       </div>
     );
   }
@@ -75,7 +75,19 @@ export function UserNav() {
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
-          <SignOutButton variant="ghost" className="w-full justify-start" />
+          <button onClick={async () => {
+            const { signOut } = await import("@/lib/auth-client");
+            const { toast } = await import("sonner");
+            try {
+              await signOut();
+              toast.success("Signed out successfully");
+            } catch (error) {
+              toast.error("Failed to sign out");
+            }
+          }} className="w-full justify-start flex items-center cursor-pointer">
+            <LogOut className="mr-2 h-4 w-4" />
+            Sign Out
+          </button>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

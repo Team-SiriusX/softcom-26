@@ -10,7 +10,6 @@ import {
   Tag,
   FileText,
   PieChart,
-  LogOut,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SignOutButton } from "@/components/auth/sign-out-button";
@@ -67,20 +66,22 @@ export function AppSidebar() {
           {navigation.map((item) => {
             const isActive = pathname === item.href;
             return (
-              <Link key={item.href} href={item.href}>
-                <Button
-                  variant="ghost"
-                  className={cn(
-                    "w-full justify-start gap-3 rounded-2xl px-4 py-3 text-[15px] font-semibold transition-colors",
-                    isActive
-                      ? "bg-[#22D3EE] text-black hover:bg-[#22D3EE]/90 shadow-sm"
-                      : "text-sidebar-foreground hover:bg-[#22D3EE]/15 hover:text-foreground"
-                  )}
-                >
+              <Button
+                key={item.href}
+                variant="ghost"
+                className={cn(
+                  "w-full justify-start gap-3 rounded-2xl px-4 py-3 text-[15px] font-semibold transition-colors",
+                  isActive
+                    ? "bg-[#22D3EE] text-black hover:bg-[#22D3EE]/90 shadow-sm"
+                    : "text-sidebar-foreground hover:bg-[#22D3EE]/15 hover:text-foreground"
+                )}
+                asChild
+              >
+                <Link href={item.href}>
                   <item.icon className="h-5 w-5" />
                   {item.name}
-                </Button>
-              </Link>
+                </Link>
+              </Button>
             );
           })}
           
@@ -88,14 +89,12 @@ export function AppSidebar() {
       </div>
 
       <div className="p-4">
-        <SignOutButton>
-            <Button
-            variant="default"
-            className="w-full justify-start gap-3 rounded-2xl bg-[#22D3EE] hover:bg-[#22D3EE]/90 text-black px-5 py-3 font-semibold shadow-sm"
-            >
-            <LogOut className="h-5 w-5" />
-            LOGOUT
-            </Button>
+        <SignOutButton
+          variant="default"
+          className="w-full justify-start gap-3 rounded-2xl bg-[#22D3EE] hover:bg-[#22D3EE]/90 text-black px-5 py-3 font-semibold shadow-sm"
+          showIcon
+        >
+          LOGOUT
         </SignOutButton>
       </div>
     </div>
