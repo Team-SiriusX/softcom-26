@@ -143,7 +143,7 @@ export default function PricingPage() {
     setLoading(tier);
 
     try {
-      const response = await client.api.stripe["create-checkout-session"].$post(
+      const response = await client.api.stripe["create-checkout-session"]["$post"](
         {
           json: {
             priceId,

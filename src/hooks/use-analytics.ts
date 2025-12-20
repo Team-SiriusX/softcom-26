@@ -44,13 +44,16 @@ export const useGetAnalyticsOverview = (businessId?: string) => {
 };
 
 // Get revenue trends
-export const useGetRevenueTrends = (businessId?: string, months: number = 12) => {
+export const useGetRevenueTrends = (
+  businessId?: string,
+  months: number = 12
+) => {
   return useQuery({
     queryKey: ["analytics", "revenue-trends", businessId, months],
     queryFn: async () => {
       if (!businessId) return null;
 
-      const response = await client.api.analytics["revenue-trends"].$get({
+      const response = await client.api.analytics["revenue-trends"]["$get"]({
         query: { businessId, months: months.toString() },
       });
 
@@ -72,11 +75,17 @@ export const useGetExpenseBreakdown = (
   endDate?: string
 ) => {
   return useQuery({
-    queryKey: ["analytics", "expense-breakdown", businessId, startDate, endDate],
+    queryKey: [
+      "analytics",
+      "expense-breakdown",
+      businessId,
+      startDate,
+      endDate,
+    ],
     queryFn: async () => {
       if (!businessId || !startDate || !endDate) return null;
 
-      const response = await client.api.analytics["expense-breakdown"].$get({
+      const response = await client.api.analytics["expense-breakdown"]["$get"]({
         query: { businessId, startDate, endDate },
       });
 
@@ -98,11 +107,18 @@ export const useGetTopExpenses = (
   limit: number = 5
 ) => {
   return useQuery({
-    queryKey: ["analytics", "top-expenses", businessId, startDate, endDate, limit],
+    queryKey: [
+      "analytics",
+      "top-expenses",
+      businessId,
+      startDate,
+      endDate,
+      limit,
+    ],
     queryFn: async () => {
       if (!businessId || !startDate || !endDate) return null;
 
-      const response = await client.api.analytics["top-expenses"].$get({
+      const response = await client.api.analytics["top-expenses"]["$get"]({
         query: {
           businessId,
           startDate,
@@ -132,7 +148,7 @@ export const useGetBalanceSheet = (businessId?: string, date?: string) => {
       const query: any = { businessId };
       if (date) query.date = date;
 
-      const response = await client.api.analytics["balance-sheet"].$get({
+      const response = await client.api.analytics["balance-sheet"]["$get"]({
         query,
       });
 
@@ -157,7 +173,7 @@ export const useGetProfitLoss = (
     queryFn: async () => {
       if (!businessId || !startDate || !endDate) return null;
 
-      const response = await client.api.analytics["profit-loss"].$get({
+      const response = await client.api.analytics["profit-loss"]["$get"]({
         query: { businessId, startDate, endDate },
       });
 
@@ -182,7 +198,7 @@ export const useGetCashFlow = (
     queryFn: async () => {
       if (!businessId || !startDate || !endDate) return null;
 
-      const response = await client.api.analytics["cash-flow"].$get({
+      const response = await client.api.analytics["cash-flow"]["$get"]({
         query: { businessId, startDate, endDate },
       });
 

@@ -46,8 +46,8 @@ export const useCreateCategory = () => {
       const response = await client.api.categories.$post({ json });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to create category");
+        const errorData = (await response.json()) as { error?: string };
+        throw new Error(errorData.error || "Failed to create category");
       }
 
       return await response.json();
@@ -60,7 +60,7 @@ export const useCreateCategory = () => {
 
 // Update category
 type UpdateCategoryRequest = InferRequestType<
-  typeof client.api.categories[":id"]["$patch"]
+  (typeof client.api.categories)[":id"]["$patch"]
 >["json"];
 
 export const useUpdateCategory = (id: string) => {
@@ -74,8 +74,8 @@ export const useUpdateCategory = (id: string) => {
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to update category");
+        const errorData = (await response.json()) as { error?: string };
+        throw new Error(errorData.error || "Failed to update category");
       }
 
       return await response.json();
@@ -97,8 +97,8 @@ export const useDeleteCategory = () => {
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to delete category");
+        const errorData = (await response.json()) as { error?: string };
+        throw new Error(errorData.error || "Failed to delete category");
       }
 
       return await response.json();

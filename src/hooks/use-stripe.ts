@@ -7,7 +7,9 @@ import { client } from "@/lib/hono";
 import { InferResponseType } from "hono";
 import { toast } from "sonner";
 
-type SubscriptionResponse = InferResponseType<typeof client.api.stripe.subscription.$get>;
+type SubscriptionResponse = InferResponseType<
+  typeof client.api.stripe.subscription.$get
+>;
 
 /**
  * Get current user's subscription details
@@ -41,15 +43,17 @@ export const useCreateCheckoutSession = () => {
       cancelUrl: string;
       metadata?: Record<string, string>;
     }) => {
-      const response = await client.api.stripe["create-checkout-session"].$post({
-        json: {
-          priceId,
-          mode: "subscription",
-          successUrl,
-          cancelUrl,
-          metadata,
-        },
-      });
+      const response = await client.api.stripe["create-checkout-session"]["$post"](
+        {
+          json: {
+            priceId,
+            mode: "subscription",
+            successUrl,
+            cancelUrl,
+            metadata,
+          },
+        }
+      );
 
       if (!response.ok) {
         throw new Error("Failed to create checkout session");
@@ -74,7 +78,9 @@ export const useCreateCheckoutSession = () => {
 export const useCreatePortalSession = () => {
   return useMutation({
     mutationFn: async () => {
-      const response = await client.api.stripe["create-portal-session"].$post();
+      const response = await client.api.stripe["create-portal-session"][
+        "$post"
+      ]();
 
       if (!response.ok) {
         throw new Error("Failed to create portal session");
@@ -100,17 +106,22 @@ export const useFeatureAccess = () => {
   const { data: subscription } = useGetSubscription();
 
   // Type guard to check if subscription has tier property
-  const hasValidSubscription = subscription && 'tier' in subscription;
+  const hasValidSubscription = subscription && "tier" in subscription;
 
   return {
     canUseAI: hasValidSubscription && subscription.tier !== "FREE",
-    canUseStrategicCFO: hasValidSubscription && (subscription.tier === "PRO" || subscription.tier === "BUSINESS"),
-    canUseTacticalAdvisor: hasValidSubscription && subscription.tier === "BUSINESS",
-    canCreate30DayPredictions: hasValidSubscription && subscription.tier === "BUSINESS",
+    canUseStrategicCFO:
+      hasValidSubscription &&
+      (subscription.tier === "PRO" || subscription.tier === "BUSINESS"),
+    canUseTacticalAdvisor:
+      hasValidSubscription && subscription.tier === "BUSINESS",
+    canCreate30DayPredictions:
+      hasValidSubscription && subscription.tier === "BUSINESS",
     aiQueriesRemaining: hasValidSubscription
       ? subscription.aiQueriesLimit - subscription.aiQueriesUsed
       : 0,
-    hasUnlimitedTransactions: hasValidSubscription && subscription.transactionsLimit === -1,
+    hasUnlimitedTransactions:
+      hasValidSubscription && subscription.transactionsLimit === -1,
     transactionsRemaining: hasValidSubscription
       ? subscription.transactionsLimit === -1
         ? Infinity

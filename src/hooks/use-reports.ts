@@ -8,7 +8,7 @@ export const useGetBalanceSheet = (businessId?: string, date?: string) => {
     queryFn: async () => {
       if (!businessId || !date) return null;
 
-      const response = await client.api.reports["balance-sheet"].$get({
+      const response = await client.api.reports["balance-sheet"]["$get"]({
         query: { businessId, date },
       });
 
@@ -33,7 +33,7 @@ export const useGetProfitLoss = (
     queryFn: async () => {
       if (!businessId || !startDate || !endDate) return null;
 
-      const response = await client.api.reports["profit-loss"].$get({
+      const response = await client.api.reports["profit-loss"]["$get"]({
         query: { businessId, startDate, endDate },
       });
 
@@ -58,7 +58,7 @@ export const useGetCashFlow = (
     queryFn: async () => {
       if (!businessId || !startDate || !endDate) return null;
 
-      const response = await client.api.reports["cash-flow"].$get({
+      const response = await client.api.reports["cash-flow"]["$get"]({
         query: { businessId, startDate, endDate },
       });
 

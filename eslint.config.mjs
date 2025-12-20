@@ -21,6 +21,8 @@ const eslintConfig = [
       "src/generated/**",
       "**/generated/**",
     ],
+  },
+  {
     rules: {
       "@typescript-eslint/no-explicit-any": "off",
       "react/no-unescaped-entities": "warn",

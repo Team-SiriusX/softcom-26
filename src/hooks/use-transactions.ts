@@ -47,7 +47,7 @@ export const useGetTransaction = (id?: string) => {
     queryFn: async () => {
       if (!id) return null;
 
-      const response = await client.api.transactions[":id"].$get({
+      const response = await client.api.transactions[":id"]["$get"]({
         param: { id },
       });
 

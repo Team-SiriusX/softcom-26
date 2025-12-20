@@ -20,7 +20,7 @@ export const useGetLedgerAccounts = (
         query.isActive = filters.isActive.toString();
       }
 
-      const response = await client.api["ledger-accounts"].$get({ query });
+      const response = await client.api["ledger-accounts"]["$get"]({ query });
 
       if (!response.ok) {
         throw new Error("Failed to fetch ledger accounts");
@@ -43,7 +43,7 @@ export const useCreateLedgerAccount = () => {
 
   return useMutation<any, Error, CreateLedgerAccountRequest>({
     mutationFn: async (json) => {
-      const response = await client.api["ledger-accounts"].$post({ json });
+      const response = await client.api["ledger-accounts"]["$post"]({ json });
 
       if (!response.ok) {
         const error = await response.json();

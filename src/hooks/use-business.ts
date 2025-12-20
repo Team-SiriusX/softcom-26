@@ -26,7 +26,7 @@ export const useGetBusiness = (id?: string) => {
     queryFn: async () => {
       if (!id) return null;
 
-      const response = await client.api.business[":id"].$get({
+      const response = await client.api.business[":id"]["$get"]({
         param: { id },
       });
 
