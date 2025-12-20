@@ -1,94 +1,147 @@
 /**
- * Voice Assistant Component
+ * Voice Assistant Component - GPT Whisper Style
  *
- * Main component that combines voice input, conversation, and voice output.
- * Full-featured voice-enabled RAG assistant interface.
+ * Minimal, elegant voice-enabled RAG assistant interface
+ * with dynamic whisper-style animations.
  */
 
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useVoiceAgent } from "@/hooks/use-voice-agent";
-import { useRefreshDashboardContext } from "@/hooks/use-dashboard-context";
 import { useSpeechSynthesis } from "./voice-output";
-import { VoiceInput } from "./voice-input";
-import { Conversation } from "./conversation";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import {
-  Send,
-  Trash2,
-  Volume2,
-  VolumeX,
-  Bot,
-  Keyboard,
-  Mic,
-  RefreshCcw,
-} from "lucide-react";
+import { Mic, X, Square, MessageSquare, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSelectedBusiness } from "@/components/providers/business-provider";
+import { useSession } from "@/lib/auth-client";
+import { useRouter } from "next/navigation";
+import { Card, CardContent } from "@/components/ui/card";
+import { Bot } from "lucide-react";
+import { WhisperVisualizer } from "./whisper-visualizer";
 
-interface VoiceAssistantProps {
-  className?: string;
-}
-
-export function VoiceAssistant({ className }: VoiceAssistantProps) {
+export function VoiceAssistant({ className }: { className?: string }) {
   const { selectedBusinessId } = useSelectedBusiness();
-  const {
-    refresh: refreshDashboardContext,
-    isRefreshing: isRefreshingDashboardContext,
-    error: dashboardContextError,
-    lastRefreshedAt,
-  } = useRefreshDashboardContext();
-  const {
-    messages,
-    isProcessing,
-    sessionId,
-    sendMessage,
-    clearConversation,
-    error,
-  } = useVoiceAgent();
+  const { data: session } = useSession();
+  const router = useRouter();
+  const userName = session?.user?.name?.split(" ")[0] || "there";
 
-  const { speak, stop, isSpeaking, isSupported: speechSupported } = useSpeechSynthesis();
+  const { messages, isProcessing, sendMessage, clearConversation } =
+    useVoiceAgent();
 
-  const [inputMode, setInputMode] = useState<"voice" | "text">("voice");
-  const [textInput, setTextInput] = useState("");
-  const [autoSpeak, setAutoSpeak] = useState(true);
+  const { speak, stop, isSpeaking } = useSpeechSynthesis();
 
-  // Handle voice transcript
-  const handleTranscript = useCallback(
-    async (text: string) => {
-      await sendMessage(text);
-    },
-    [sendMessage]
-  );
+  // Speech Recognition State
+  const [isListening, setIsListening] = useState(false);
+  const [isSupported, setIsSupported] = useState(true);
+  const [showConversation, setShowConversation] = useState(false);
+  const recognitionRef = useRef<any>(null);
+  const conversationRef = useRef<HTMLDivElement>(null);
 
-  // Handle text submit
-  const handleTextSubmit = useCallback(
-    async (e: React.FormEvent) => {
-      e.preventDefault();
-      if (!textInput.trim() || isProcessing) return;
+  // Initialize Speech Recognition
+  useEffect(() => {
+    if (typeof window === "undefined") return;
 
-      const message = textInput.trim();
-      setTextInput("");
-      await sendMessage(message);
-    },
-    [textInput, isProcessing, sendMessage]
-  );
+    const SpeechRecognition =
+      (window as any).SpeechRecognition ||
+      (window as any).webkitSpeechRecognition;
 
-  // Auto-speak latest assistant message
+    if (!SpeechRecognition) {
+      setIsSupported(false);
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = "en-US";
+
+    recognition.onstart = () => setIsListening(true);
+    recognition.onend = () => setIsListening(false);
+
+    recognition.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript;
+      if (transcript) {
+        sendMessage(transcript);
+      }
+    };
+
+    recognitionRef.current = recognition;
+  }, [sendMessage]);
+
+  const toggleListening = () => {
+    if (!recognitionRef.current) return;
+
+    if (isSpeaking) {
+      stop();
+      return;
+    }
+
+    if (isListening) {
+      recognitionRef.current.stop();
+    } else {
+      recognitionRef.current.start();
+    }
+  };
+
+  // Keyboard shortcut for space
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.code === "Space" && e.target === document.body) {
+        e.preventDefault();
+        toggleListening();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isListening, isSpeaking]);
+
+  // Auto-speak response
   const lastAssistantMessage = messages
     .filter((m) => m.role === "assistant")
     .slice(-1)[0];
 
-  // Handle auto-speak for new messages
-  const handleNewMessage = useCallback(() => {
-    if (autoSpeak && lastAssistantMessage && speechSupported) {
+  const lastMessageRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (
+      lastAssistantMessage &&
+      lastAssistantMessage.content !== lastMessageRef.current &&
+      !isListening
+    ) {
+      lastMessageRef.current = lastAssistantMessage.content;
       speak(lastAssistantMessage.content);
     }
-  }, [autoSpeak, lastAssistantMessage, speechSupported, speak]);
+  }, [lastAssistantMessage, isListening, speak]);
+
+  // Auto-scroll conversation
+  useEffect(() => {
+    if (conversationRef.current) {
+      conversationRef.current.scrollTop = conversationRef.current.scrollHeight;
+    }
+  }, [messages]);
+
+  // Get current status text
+  const getStatusText = () => {
+    if (isListening) return "Listening...";
+    if (isProcessing) return "Thinking...";
+    if (isSpeaking) return "Speaking...";
+    return `Hi ${userName}`;
+  };
+
+  const getSubtitleText = () => {
+    if (isListening) return "Speak now";
+    if (isProcessing) return "Processing your request";
+    if (isSpeaking && lastAssistantMessage) {
+      const text = lastAssistantMessage.content;
+      return text.length > 100 ? text.substring(0, 100) + "..." : text;
+    }
+    if (lastAssistantMessage) {
+      const text = lastAssistantMessage.content;
+      return text.length > 100 ? text.substring(0, 100) + "..." : text;
+    }
+    return "Tap the microphone to start";
+  };
 
   if (!selectedBusinessId) {
     return (
@@ -105,153 +158,235 @@ export function VoiceAssistant({ className }: VoiceAssistantProps) {
   }
 
   return (
-    <Card className={cn("flex flex-col h-full", className)}>
-      {/* Header */}
-      <CardHeader className="flex-shrink-0 border-b">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="rounded-full bg-primary/10 p-2">
-              <Bot className="h-5 w-5 text-primary" />
-            </div>
-            <div>
-              <CardTitle className="text-lg">Financial Assistant</CardTitle>
-              {sessionId && (
-                <p className="text-xs text-muted-foreground">
-                  Session: {sessionId.slice(0, 20)}...
-                </p>
-              )}
-              {lastRefreshedAt && (
-                <p className="text-xs text-muted-foreground">
-                  Context refreshed: {lastRefreshedAt.toLocaleTimeString()}
-                </p>
-              )}
-            </div>
-          </div>
+    <div
+      className={cn(
+        "relative flex flex-col items-center justify-center w-full h-full overflow-hidden bg-black text-white",
+        className
+      )}
+    >
+      {/* Subtle gradient background */}
+      <div className="absolute inset-0 bg-gradient-to-b from-neutral-950 via-black to-neutral-950" />
 
-          <div className="flex items-center gap-2">
-            {/* Refresh dashboard context */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={async () => {
-                try {
-                  await refreshDashboardContext();
-                } catch {
-                  // error is surfaced via dashboardContextError
-                }
-              }}
-              disabled={isRefreshingDashboardContext || isProcessing}
-              title="Refresh dashboard context"
-            >
-              <RefreshCcw
-                className={cn(
-                  "h-4 w-4",
-                  isRefreshingDashboardContext && "animate-spin"
-                )}
-              />
-            </Button>
-
-            {/* Auto-speak toggle */}
-            {speechSupported && (
-              <Button
-                variant={autoSpeak ? "secondary" : "ghost"}
-                size="sm"
-                onClick={() => {
-                  setAutoSpeak(!autoSpeak);
-                  if (isSpeaking) stop();
-                }}
-                title={autoSpeak ? "Disable auto-speak" : "Enable auto-speak"}
-              >
-                {autoSpeak ? (
-                  <Volume2 className="h-4 w-4" />
-                ) : (
-                  <VolumeX className="h-4 w-4" />
-                )}
-              </Button>
-            )}
-
-            {/* Input mode toggle */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() =>
-                setInputMode(inputMode === "voice" ? "text" : "voice")
-              }
-              title={`Switch to ${inputMode === "voice" ? "text" : "voice"} input`}
-            >
-              {inputMode === "voice" ? (
-                <Keyboard className="h-4 w-4" />
-              ) : (
-                <Mic className="h-4 w-4" />
-              )}
-            </Button>
-
-            {/* Clear conversation */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={clearConversation}
-              disabled={messages.length === 0}
-              title="Clear conversation"
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-
-        {(error || dashboardContextError) && (
-          <Badge variant="destructive" className="mt-2">
-            {error || dashboardContextError}
-          </Badge>
+      {/* Ambient glow effect */}
+      <div
+        className={cn(
+          "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full transition-all duration-1000 blur-[120px]",
+          isListening
+            ? "bg-white/10 scale-110"
+            : isSpeaking
+              ? "bg-white/8 scale-105"
+              : isProcessing
+                ? "bg-white/5 scale-100 animate-pulse"
+                : "bg-white/3 scale-95"
         )}
-      </CardHeader>
+      />
 
-      {/* Conversation */}
-      <CardContent className="flex-1 overflow-hidden p-0">
-        <Conversation
-          messages={messages}
-          isProcessing={isProcessing}
-          className="h-full"
-        />
-      </CardContent>
+      {/* Close button */}
+      <Button
+        variant="ghost"
+        size="icon"
+        className="absolute top-6 left-6 z-20 text-neutral-400 hover:text-white hover:bg-white/10 rounded-full transition-colors"
+        onClick={() => router.push("/dashboard")}
+      >
+        <X className="h-5 w-5" />
+      </Button>
 
-      {/* Input Area */}
-      <div className="flex-shrink-0 border-t p-4">
-        {inputMode === "voice" ? (
-          <div className="flex flex-col items-center gap-2">
-            <VoiceInput
-              onTranscript={handleTranscript}
-              disabled={isProcessing}
-            />
-            <p className="text-xs text-muted-foreground">
-              Tap to speak, or{" "}
-              <button
-                className="underline hover:text-foreground"
-                onClick={() => setInputMode("text")}
-              >
-                type instead
-              </button>
-            </p>
-          </div>
-        ) : (
-          <form onSubmit={handleTextSubmit} className="flex gap-2">
-            <Input
-              value={textInput}
-              onChange={(e) => setTextInput(e.target.value)}
-              placeholder="Ask about your finances..."
-              disabled={isProcessing}
-              className="flex-1"
-            />
-            <Button
-              type="submit"
-              disabled={!textInput.trim() || isProcessing}
-              size="icon"
-            >
-              <Send className="h-4 w-4" />
-            </Button>
-          </form>
+      {/* Action buttons top right */}
+      <div className="absolute top-6 right-6 z-20 flex items-center gap-2">
+        {messages.length > 0 && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-neutral-400 hover:text-white hover:bg-white/10 rounded-full transition-colors"
+            onClick={() => setShowConversation(!showConversation)}
+          >
+            <MessageSquare className="h-5 w-5" />
+          </Button>
+        )}
+        {messages.length > 0 && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-neutral-400 hover:text-red-400 hover:bg-white/10 rounded-full transition-colors"
+            onClick={clearConversation}
+          >
+            <Trash2 className="h-5 w-5" />
+          </Button>
         )}
       </div>
-    </Card>
+
+      {/* Main content area */}
+      <div className="relative z-10 flex flex-col items-center justify-center flex-1 w-full max-w-2xl px-8">
+        {/* Whisper visualizer */}
+        <div
+          className={cn(
+            "w-20 h-20 mb-12 transition-all duration-500",
+            isListening && "scale-125",
+            isSpeaking && "scale-110",
+            isProcessing && "scale-100"
+          )}
+        >
+          <WhisperVisualizer
+            isListening={isListening}
+            isSpeaking={isSpeaking}
+            isProcessing={isProcessing}
+          />
+        </div>
+
+        {/* Status text */}
+        <div className="text-center space-y-4">
+          <h1
+            className={cn(
+              "text-4xl md:text-5xl font-light tracking-tight transition-all duration-500",
+              isListening && "text-white",
+              isSpeaking && "text-neutral-200",
+              isProcessing && "text-neutral-300",
+              !isListening && !isSpeaking && !isProcessing && "text-neutral-100"
+            )}
+          >
+            {getStatusText()}
+          </h1>
+
+          <p
+            className={cn(
+              "text-lg md:text-xl font-light max-w-md mx-auto leading-relaxed transition-all duration-500",
+              isListening
+                ? "text-neutral-300"
+                : isSpeaking
+                  ? "text-neutral-400"
+                  : "text-neutral-500"
+            )}
+          >
+            {getSubtitleText()}
+          </p>
+        </div>
+      </div>
+
+      {/* Microphone button */}
+      <div className="absolute bottom-16 z-20">
+        <Button
+          size="lg"
+          className={cn(
+            "h-20 w-20 rounded-full shadow-2xl transition-all duration-300 border-0",
+            isListening
+              ? "bg-white text-black hover:bg-neutral-200 scale-110 ring-4 ring-white/20"
+              : isSpeaking
+                ? "bg-neutral-800 text-white hover:bg-neutral-700 ring-2 ring-white/10"
+                : "bg-white text-black hover:bg-neutral-200"
+          )}
+          onClick={toggleListening}
+          disabled={!isSupported}
+        >
+          {isListening ? (
+            <Square className="h-8 w-8 fill-current" />
+          ) : isSpeaking ? (
+            <Square className="h-8 w-8" />
+          ) : (
+            <Mic className="h-8 w-8" />
+          )}
+        </Button>
+
+        {/* Ripple effect when listening */}
+        {isListening && (
+          <>
+            <div className="absolute inset-0 rounded-full bg-white/20 animate-ping" />
+            <div
+              className="absolute inset-0 rounded-full bg-white/10 animate-ping"
+              style={{ animationDelay: "0.2s" }}
+            />
+          </>
+        )}
+      </div>
+
+      {/* Conversation panel (slide in from right) */}
+      <div
+        className={cn(
+          "absolute top-0 right-0 h-full w-full md:w-96 bg-neutral-950/95 backdrop-blur-xl border-l border-white/10 transform transition-transform duration-300 z-30",
+          showConversation ? "translate-x-0" : "translate-x-full"
+        )}
+      >
+        <div className="flex flex-col h-full">
+          {/* Header */}
+          <div className="flex items-center justify-between p-4 border-b border-white/10">
+            <h2 className="text-lg font-medium">Conversation</h2>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-neutral-400 hover:text-white hover:bg-white/10 rounded-full"
+              onClick={() => setShowConversation(false)}
+            >
+              <X className="h-5 w-5" />
+            </Button>
+          </div>
+
+          {/* Messages */}
+          <div
+            ref={conversationRef}
+            className="flex-1 overflow-y-auto p-4 space-y-4"
+          >
+            {messages.length === 0 ? (
+              <div className="text-center text-neutral-500 py-12">
+                No messages yet
+              </div>
+            ) : (
+              messages.map((message) => (
+                <div
+                  key={message.id}
+                  className={cn(
+                    "flex",
+                    message.role === "user" ? "justify-end" : "justify-start"
+                  )}
+                >
+                  <div
+                    className={cn(
+                      "max-w-[85%] rounded-2xl px-4 py-3",
+                      message.role === "user"
+                        ? "bg-white text-black rounded-br-md"
+                        : "bg-neutral-800 text-white rounded-bl-md"
+                    )}
+                  >
+                    <p className="text-sm leading-relaxed">{message.content}</p>
+                    {message.confidence && (
+                      <p className="text-xs mt-2 opacity-60">
+                        {message.confidence} confidence
+                      </p>
+                    )}
+                  </div>
+                </div>
+              ))
+            )}
+
+            {isProcessing && (
+              <div className="flex justify-start">
+                <div className="bg-neutral-800 rounded-2xl rounded-bl-md px-4 py-3">
+                  <div className="flex items-center gap-1">
+                    <div className="w-2 h-2 bg-white/60 rounded-full animate-bounce" />
+                    <div
+                      className="w-2 h-2 bg-white/60 rounded-full animate-bounce"
+                      style={{ animationDelay: "0.1s" }}
+                    />
+                    <div
+                      className="w-2 h-2 bg-white/60 rounded-full animate-bounce"
+                      style={{ animationDelay: "0.2s" }}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Keyboard shortcut hint */}
+      {!isListening && !isSpeaking && !isProcessing && (
+        <div className="absolute bottom-6 text-neutral-600 text-sm transition-opacity duration-500">
+          Press{" "}
+          <kbd className="px-2 py-1 bg-neutral-900 rounded text-neutral-400 text-xs">
+            Space
+          </kbd>{" "}
+          or tap to speak
+        </div>
+      )}
+    </div>
   );
 }
