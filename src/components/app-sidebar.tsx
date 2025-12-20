@@ -11,6 +11,7 @@ import {
   FileText,
   PieChart,
   LogOut,
+  Bot,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SignOutButton } from "@/components/auth/sign-out-button";
@@ -45,6 +46,11 @@ const navigation = [
     name: "Analytics",
     href: "/dashboard/analytics",
     icon: PieChart,
+  },
+  {
+    name: "AI Assistant",
+    href: "/dashboard/assistant",
+    icon: Bot,
   },
 ];
 
@@ -88,14 +94,11 @@ export function AppSidebar() {
       </div>
 
       <div className="p-4">
-        <SignOutButton>
-            <Button
-            variant="default"
-            className="w-full justify-start gap-3 rounded-2xl bg-[#22D3EE] hover:bg-[#22D3EE]/90 text-black px-5 py-3 font-semibold shadow-sm"
-            >
-            <LogOut className="h-5 w-5" />
-            LOGOUT
-            </Button>
+        <SignOutButton
+          variant="default"
+          className="w-full justify-start gap-3 rounded-2xl bg-[#22D3EE] hover:bg-[#22D3EE]/90 text-black px-5 py-3 font-semibold shadow-sm"
+        >
+          LOGOUT
         </SignOutButton>
       </div>
     </div>

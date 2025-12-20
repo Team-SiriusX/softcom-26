@@ -7,3 +7,4 @@ export { default as journalEntries } from "./journal-entries";
 export { default as reports } from "./reports";
 export { default as analytics } from "./analytics";
 export { default as stripe } from "./stripe";
+export { default as agent } from "./agent";
