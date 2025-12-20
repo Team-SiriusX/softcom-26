@@ -14,6 +14,8 @@ import {
   Bot,
   Users,
   FileText as Invoice,
+  Mail,
+  Calculator,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SignOutButton } from "@/components/auth/sign-out-button";
@@ -60,7 +62,17 @@ const navigation = [
     icon: PieChart,
   },
   {
-    name: "Assistant",
+    name: "CollectorAI",
+    href: "/dashboard/collector",
+    icon: Mail,
+  },
+  {
+    name: "SimulatorAI",
+    href: "/dashboard/simulator",
+    icon: Calculator,
+  },
+  {
+    name: "FenoraAI",
     href: "/dashboard/assistant",
     icon: Bot,
   },

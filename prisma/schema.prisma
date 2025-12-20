@@ -107,6 +107,8 @@ model Business {
   journalEntries      JournalEntry[]
   clients             Client[]
   invoices            Invoice[]
+  clientPaymentHistories ClientPaymentHistory[]
+  agentExecutionLogs  AgentExecutionLog[]
 
   @@map("business")
 }
@@ -205,6 +207,14 @@ model Invoice {
   attachmentUrl   String?        // URL to uploaded invoice file
   reminderSent    Boolean        @default(false)
   reminderDate    DateTime?      // When to send reminder
+  
+  // CollectorAI fields
+  lastFollowUpAt    DateTime?
+  followUpCount     Int             @default(0)
+  escalationLevel   EscalationLevel @default(NONE)
+  agentNotes        String?         @db.Text
+  nextActionDate    DateTime?
+  
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
   businessId      String
@@ -214,11 +224,14 @@ model Invoice {
   
   // Relations
   items           InvoiceItem[]
+  collectionActions CollectionAction[]
+  paymentPlan       PaymentPlan?
 
   @@unique([businessId, invoiceNumber])
   @@index([businessId, status])
   @@index([businessId, dueDate])
   @@index([clientId])
+  @@index([nextActionDate])
   @@map("invoice")
 }
 
@@ -432,5 +445,176 @@ enum InvoiceStatus {
   PAID
   OVERDUE
   CANCELLED
+  DISPUTED
+}
+
+// ============================================
+// COLLECTORAI MODELS
+// ============================================
+
+enum EscalationLevel {
+  NONE
+  FRIENDLY_REMINDER
+  FIRM_REMINDER
+  URGENT_NOTICE
+  FINAL_NOTICE
+  LEGAL_WARNING
+}
+
+model CollectionAction {
+  id          String                @id @default(cuid())
+  invoiceId   String
+  invoice     Invoice               @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  
+  executionLogId  String?
+  executionLog    AgentExecutionLog?  @relation(fields: [executionLogId], references: [id], onDelete: SetNull)
+  
+  actionType  CollectionActionType
+  channel     String                @default("EMAIL")
+  status      ActionStatus          @default(PENDING)
+  
+  // Email Details
+  emailSubject  String?
+  emailBody     String?              @db.Text
+  sentAt        DateTime?
+  sentToEmail   String?
+  emailSent     Boolean               @default(false)
+  
+  // AI Context
+  aiReasoning   String?              @db.Text
+  aiPrompt      String?              @db.Text
+  
+  scheduledFor  DateTime?
+  executedAt    DateTime?
+  result        String?              @db.Text
+  errorMessage  String?              @db.Text
+  
+  metadata      Json?
+  
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+  
+  @@index([invoiceId, status])
+  @@index([executionLogId])
+  @@index([scheduledFor])
+  @@index([createdAt])
+  @@map("collection_action")
+}
+
+enum CollectionActionType {
+  SEND_INVOICE
+  FRIENDLY_REMINDER
+  FIRM_REMINDER
+  URGENT_NOTICE
+  FINAL_NOTICE
+  LEGAL_WARNING
+  PAYMENT_PLAN_OFFER
+  THANK_YOU
+  MANUAL_REVIEW
+}
+
+enum ActionStatus {
+  PENDING
+  SCHEDULED
+  SENT
+  DELIVERED
+  OPENED
+  CLICKED
+  REPLIED
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+model PaymentPlan {
+  id          String    @id @default(cuid())
+  invoiceId   String    @unique
+  invoice     Invoice   @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  
+  totalAmount       Float
+  installments      Int
+  installmentAmount Float
+  frequency         String  // WEEKLY, BI_WEEKLY, MONTHLY
+  
+  startDate         DateTime
+  nextDueDate       DateTime
+  status            String   @default("PROPOSED") // PROPOSED, ACCEPTED, ACTIVE, COMPLETED, DEFAULTED
+  
+  installmentsPaid  Int      @default(0)
+  amountPaid        Float    @default(0)
+  
+  proposedAt        DateTime @default(now())
+  acceptedAt        DateTime?
+  completedAt       DateTime?
+  
+  metadata          Json?
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  @@index([status])
+  @@index([nextDueDate])
+  @@map("payment_plan")
+}
+
+model ClientPaymentHistory {
+  id              String   @id @default(cuid())
+  businessId      String
+  business        Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  
+  clientEmail     String
+  clientName      String
+  
+  // Stats (updated by agent)
+  totalInvoicesSent      Int     @default(0)
+  totalInvoicesPaid      Int     @default(0)
+  totalAmountInvoiced    Float   @default(0)
+  totalAmountPaid        Float   @default(0)
+  
+  avgDaysToPayment       Float   @default(0)
+  paidOnTimeCount        Int     @default(0)
+  paidLateCount          Int     @default(0)
+  
+  currentOverdueCount    Int     @default(0)
+  currentOverdueAmount   Float   @default(0)
+  
+  reliabilityScore       Float   @default(1.0) // 0-1
+  riskLevel              String  @default("LOW") // LOW, MEDIUM, HIGH
+  
+  lastInvoiceDate        DateTime?
+  lastPaymentDate        DateTime?
+  
+  lastUpdated            DateTime @default(now())
+  
+  @@unique([businessId, clientEmail])
+  @@index([businessId, riskLevel])
+  @@index([reliabilityScore])
+  @@map("client_payment_history")
+}
+
+model AgentExecutionLog {
+  id              String   @id @default(cuid())
+  businessId      String
+  business        Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  
+  executionType   String   // SCHEDULED, MANUAL, WEBHOOK
+  status          String   // RUNNING, COMPLETED, FAILED
+  
+  invoicesProcessed  Int   @default(0)
+  actionsCreated     Int   @default(0)
+  emailsSent         Int   @default(0)
+  errors             Int   @default(0)
+  
+  startedAt       DateTime @default(now())
+  completedAt     DateTime?
+  durationMs      Int?
+  
+  errorLog        String?  @db.Text
+  summaryReport   String?  @db.Text
+  
+  actions         CollectionAction[]
+  
+  @@index([businessId, startedAt])
+  @@map("agent_execution_log")
 }
 

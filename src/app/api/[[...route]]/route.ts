@@ -15,6 +15,7 @@ import {
   simulator,
   clients,
   invoices,
+  collector,
 } from "./controllers/(base)";
 
 const app = new Hono().basePath("/api");
@@ -42,7 +43,8 @@ const routes = app
   .route("/agent", agent)
   .route("/simulator", simulator)
   .route("/clients", clients)
-  .route("/invoices", invoices);
+  .route("/invoices", invoices)
+  .route("/collector", collector);
 
 export const GET = handle(app);
 export const POST = handle(app);
